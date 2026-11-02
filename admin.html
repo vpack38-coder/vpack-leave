@@ -18,32 +18,32 @@
   --ok:#1f8a4c; --ok-l:#e5f5ec; --warn:#b26a00; --warn-l:#fff4e0; --bad:#c62828; --bad-l:#fdeaea;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,'Leelawadee UI',sans-serif;font-size:16px;line-height:1.35}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,'Leelawadee UI',sans-serif;font-size:14px;line-height:1.35}
 button,input,select,textarea{font:inherit;color:inherit}
 *,*::before,*::after,table,th,td,dialog,code,input,select,textarea,button{font-family:Tahoma,sans-serif!important}
 header{background:var(--brand);color:#fff}
-header .in{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
-.brand .logo{background:#fff;color:var(--brand);border-radius:9px;padding:1px 8px;font-size:16px}
+header .in{max-width:1920px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+.brand .logo{background:#fff;color:var(--brand);border-radius:9px;padding:1px 8px;font-size:14px}
 .brand .logo b{color:var(--green)}
 nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
 nav button{background:none;border:0;color:#fff;opacity:.85;padding:7px 12px;border-radius:9px;cursor:pointer}
 nav button.on{background:rgba(255,255,255,.2);opacity:1;font-weight:600}
-main{max-width:1280px;margin:0 auto;padding:16px}
+main{max-width:1920px;margin:0 auto;padding:16px}
 .card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(80,40,20,.05);margin-bottom:14px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .stat{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.stat .n{font-size:22px;font-weight:700;line-height:1.2}
-.stat .l{font-size:13px;color:var(--muted)}
+.stat .n{font-size:20px;font-weight:700;line-height:1.2}
+.stat .l{font-size:12px;color:var(--muted)}
 .stat.alert .n{color:var(--brand)}
 .empstat{background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);border-left:4px solid var(--brand)}
 .empstat .eh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .empstat .eg{display:flex;flex-wrap:wrap;gap:8px}
 .es{background:var(--bg);border-radius:10px;padding:6px 12px;min-width:110px}
-.es .t{font-size:13px;color:var(--muted)}
-.es .v{font-size:19px;font-weight:700;line-height:1.3}
-.es .v small{font-size:13px;color:var(--muted);font-weight:400}
-.es .s{font-size:13px;color:var(--muted)}
+.es .t{font-size:12px;color:var(--muted)}
+.es .v{font-size:17px;font-weight:700;line-height:1.3}
+.es .v small{font-size:12px;color:var(--muted);font-weight:400}
+.es .s{font-size:12px;color:var(--muted)}
 .es.over{background:var(--bad-l)} .es.over .v{color:var(--bad)}
 .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .filters > *{flex:0 1 auto}
@@ -52,17 +52,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand)}
 .btn{border:0;border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;background:var(--brand);color:#fff;white-space:nowrap}
 .btn.sec{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
 .btn.danger{background:#fff;color:var(--bad);border:1.5px solid #f2c4c4}
-.btn.sm{padding:4px 10px;font-size:13px;font-weight:500}
+.btn.sm{padding:4px 10px;font-size:12px;font-weight:500}
 .btn:disabled{opacity:.5}
 .tw{overflow-x:auto;margin:0 -16px;padding:0 16px}
-table{width:100%;border-collapse:collapse;font-size:16px}
-th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:8px;border-bottom:1.5px solid var(--line);white-space:nowrap;background:#fff;position:sticky;top:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:8px;border-bottom:1.5px solid var(--line);white-space:nowrap;background:#fff;position:sticky;top:0}
 td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 tr:hover td{background:#fcfaf8}
 td.num,th.num{text-align:right;white-space:nowrap}
 td.nw{white-space:nowrap}
-.reason{max-width:260px;color:#3b3430}
-.tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:13px;font-weight:500;white-space:nowrap}
+.reason{min-width:180px;color:#3b3430}
+.tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:500;white-space:nowrap}
 .t-ลาป่วย{background:#e8f1fd;color:#1b5fb0}
 .t-ลากิจ{background:#f2ebfd;color:#6a3fb0}
 .t-ลาพักร้อน{background:var(--ok-l);color:var(--ok)}
@@ -73,14 +73,14 @@ td.nw{white-space:nowrap}
 .tag.src{background:#f1efed;color:var(--muted)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
 .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.none{background:#ccc}
-.sub{color:var(--muted);font-size:13px}
+.sub{color:var(--muted);font-size:12px}
 .over{color:var(--bad);font-weight:700}
 .chk{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
 .muted{color:var(--muted)}
 .hidden{display:none!important}
 .login{max-width:380px;margin:60px auto}
-.login h1{font-size:19px;margin:0 0 4px}
-.msg{border-radius:10px;padding:8px 12px;margin-top:10px;font-size:16px}
+.login h1{font-size:17px;margin:0 0 4px}
+.msg{border-radius:10px;padding:8px 12px;margin-top:10px;font-size:14px}
 .msg.bad{background:var(--bad-l);color:var(--bad)} .msg.ok{background:var(--ok-l);color:var(--ok)} .msg.warn{background:var(--warn-l);color:var(--warn)}
 dialog{border:0;border-radius:16px;padding:0;width:min(640px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25)}
 dialog::backdrop{background:rgba(30,20,10,.45)}
@@ -88,15 +88,15 @@ dialog::backdrop{background:rgba(30,20,10,.45)}
 .dlg-b{padding:16px 18px;max-height:70vh;overflow:auto}
 .dlg-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
-.grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
+.grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
 .grid label.full{grid-column:1/-1}
-.grid input,.grid select,.grid textarea{color:var(--ink);font-size:16px}
-.x{background:none;border:0;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2b2522;color:#fff;padding:10px 16px;border-radius:10px;font-size:16px;z-index:99;opacity:0;transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.grid input,.grid select,.grid textarea{color:var(--ink);font-size:14px}
+.x{background:none;border:0;font-size:18px;cursor:pointer;color:var(--muted);line-height:1}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2b2522;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;opacity:0;transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
 .toast.on{opacity:1}
-.h2{font-size:16px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.h2{font-size:14px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .h2 .sp{margin-left:auto;display:flex;gap:8px}
-code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-break:break-all}
+code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:12px;word-break:break-all}
 @media (max-width:640px){ .grid{grid-template-columns:1fr} nav{margin-left:0;width:100%} }
 </style>
 </head>
@@ -108,6 +108,7 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-
     <button data-tab="summary">สรุปรายคน</button>
     <button data-tab="emps">พนักงาน</button>
     <button data-tab="settings">แอดมิน/ตั้งค่า</button>
+    <button onclick="zoomBy(-0.05)" title="ตัวหนังสือเล็กลง">A−</button><button onclick="zoomBy(0.05)" title="ตัวหนังสือใหญ่ขึ้น">A+</button>
     <button onclick="logout()">ออกจากระบบ</button>
   </nav>
 </div></header>
@@ -116,7 +117,7 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-
   <!-- เข้าสู่ระบบ -->
   <section id="vLogin" class="card login">
     <h1>เข้าสู่ระบบ</h1>
-    <div class="muted" style="font-size:16px;margin-bottom:12px">ใช้อีเมลและรหัสผ่านที่สร้างไว้ใน Supabase (Authentication &gt; Users)</div>
+    <div class="muted" style="font-size:14px;margin-bottom:12px">ใช้อีเมลและรหัสผ่านที่สร้างไว้ใน Supabase (Authentication &gt; Users)</div>
     <input type="email" id="em" placeholder="อีเมล" style="width:100%;margin-bottom:8px" autocomplete="username">
     <input type="password" id="pw" placeholder="รหัสผ่าน" style="width:100%" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
     <button class="btn" style="width:100%;margin-top:10px;padding:10px" onclick="login()">เข้าสู่ระบบ</button>
@@ -442,9 +443,9 @@ function renderLeaves(){
   $('tbLeaves').innerHTML = rows.map(l => `<tr>
     <td class="nw">${esc(l.no)}${l.source==='แอดมินบันทึก'?'<br><span class="tag src">แอดมินบันทึก</span>':''}</td>
     <td class="nw sub">${esc(l.ts)}</td>
-    <td><b>${esc(l.name)}</b>${l.nick?' ('+esc(l.nick)+')':''}<br><span class="sub">${esc(l.dept)}</span>${l.empId?'':'<br><span class="tag retro">ไม่พบในทะเบียน</span>'}</td>
+    <td class="nw"><b>${esc(l.name)}</b>${l.nick?' ('+esc(l.nick)+')':''}<br><span class="sub">${esc(l.dept)}</span>${l.empId?'':'<br><span class="tag retro">ไม่พบในทะเบียน</span>'}</td>
     <td><span class="tag t-${esc(l.type)}">${esc(typeLabel(l))}</span></td>
-    <td class="nw">${be(l.start)}${l.end!==l.start?' –<br>'+be(l.end):''}<br><span class="sub">${esc(l.period)}</span>${l.retro?' <span class="tag retro">ย้อนหลัง</span>':''}</td>
+    <td class="nw">${be(l.start)}${l.end!==l.start?' – '+be(l.end):''}<br><span class="sub">${esc(l.period)}</span>${l.retro?' <span class="tag retro">ย้อนหลัง</span>':''}</td>
     <td class="num"><b>${num(l.days)}</b></td>
     <td class="reason">${esc(l.reason)}${l.note?`<br><span class="sub">📝 ${esc(l.note)}</span>`:''}</td>
     <td class="nw sub">${notifyCell(l)}</td>
@@ -645,6 +646,11 @@ function exportCSV(){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   const t = D.today.split('-'); a.download = `ใบลา_${t[2]}-${t[1]}-${+t[0]+543}.csv`; a.click();
 }
+
+/* ---------- ปรับขนาดตัวหนังสือ (จำไว้ในเครื่องนี้) ---------- */
+function applyZoom(z){ z = Math.min(1.5, Math.max(0.75, Math.round(z*100)/100)); document.body.style.zoom = z; lsSet('vpack_leave_zoom', String(z)); return z; }
+function zoomBy(d){ const z = applyZoom((parseFloat(lsGet('vpack_leave_zoom'))||1) + d); toast('ขนาดตัวหนังสือ ' + Math.round(z*100) + '%'); }
+applyZoom(parseFloat(lsGet('vpack_leave_zoom'))||1);
 
 /* ---------- start ---------- */
 (async () => {
