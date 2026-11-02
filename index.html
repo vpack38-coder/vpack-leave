@@ -7,8 +7,9 @@
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <!-- ===================== ตั้งค่า (แก้ 2 บรรทัดนี้) ===================== -->
 <script>
-  const API_URL = 'https://script.google.com/macros/s/AKfycbyHzI072AVOtZCTfLLBZ5mg5_sEs3oaPGUWcUNI3EbbNr3NZGP8kyBkHwH9Govup2k/exec';   // ลงท้ายด้วย /exec
-  const LIFF_ID = '2012340145-4XVMLx3s';                                          // ว่างไว้ = โหมดทดสอบ (เปิดในเบราว์เซอร์ได้เลย)
+  const SB_URL  = 'https://arcafornkumgbxdzmdob.supabase.co';        // เช่น https://abcdefgh.supabase.co
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyY2Fmb3Jua3VtZ2J4ZHptZG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MTY4NTAsImV4cCI6MjEwOTE5Mjg1MH0.dBaUZO5UHHsRfKsTtIJhI4Qx3t5V1cX3npKMo3J4Exw';    // คีย์สาธารณะ (ใส่ในหน้าเว็บได้)
+  const LIFF_ID = '2012340145-4XVMLx3s';                   // ว่างไว้ = โหมดทดสอบ (เปิดในเบราว์เซอร์ได้เลย)
 </script>
 <style>
 :root{
@@ -91,7 +92,7 @@ input[type=date]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:n
 </style>
 </head>
 <body>
-<div id="testBar" class="test hidden">โหมดทดสอบ — ยังไม่ได้ใส่ LIFF_ID (ข้อมูลจะบันทึกจริงลง Google Sheets)</div>
+<div id="testBar" class="test hidden">โหมดทดสอบ — ยังไม่ได้ใส่ LIFF_ID (ข้อมูลจะบันทึกจริงลง Supabase)</div>
 <header class="top"><div class="in">
   <div class="brand"><span class="logo"><b>V</b>-pack</span> แจ้งลางาน</div>
   <div class="sub" id="subTitle">บริษัท วี แพค การพิมพ์และบรรจุภัณฑ์ จำกัด</div>
@@ -127,7 +128,7 @@ input[type=date]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:n
       <label class="f">ชื่อแอดมิน</label>
       <input type="text" id="admName" placeholder="เช่น คุณแหม่ม">
       <label class="f">รหัสผ่านแอดมิน</label>
-      <input type="password" id="admPw" placeholder="รหัสผ่านหน้าจัดการ">
+      <input type="text" id="admPw" placeholder="รหัสผ่านหน้าจัดการ" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false">
       <div id="admMsg"></div>
       <button class="btn" style="margin-top:16px" onclick="doRegisterAdmin()">ลงทะเบียน</button>
       <button class="btn ghost" style="margin-top:10px" onclick="goForm()">ไปหน้าแจ้งลา</button>
@@ -221,9 +222,19 @@ function num(n){ return String(Math.round(n*100)/100); }
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
+const RPC = {
+  init:          b => ['leave_init', { p_uid: b.uid }],
+  register:      b => ['leave_register', { p_uid: b.uid, p_line_name: b.lineName, p_emp_id: b.empId }],
+  registerAdmin: b => ['leave_register_admin', { p_uid: b.uid, p_line_name: b.lineName, p_name: b.name, p_password: b.key }],
+  submit:        b => ['leave_submit', { p_uid: b.uid, p_emp_id: b.empId, p_type: b.type, p_type_other: b.typeOther, p_reason: b.reason,
+                    p_start: b.start, p_end: b.end || b.start, p_period_type: b.periodType, p_time_from: b.timeFrom, p_time_to: b.timeTo, p_phone: b.phone }]
+};
 async function api(body){
-  if (!/^https:\/\/script\.google/.test(API_URL)) throw new Error('ยังไม่ได้ใส่ API_URL ในไฟล์ index.html');
-  const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+  if (!/^https:\/\/.+\.supabase\.co/.test(SB_URL) || SB_ANON.length < 30) throw new Error('ยังไม่ได้ใส่ SB_URL / SB_ANON ในไฟล์ index.html');
+  const [fn, args] = RPC[body.action](body);
+  const r = await fetch(SB_URL.replace(/\/$/,'') + '/rest/v1/rpc/' + fn, { method:'POST',
+    headers: Object.assign({ 'Content-Type':'application/json', apikey: SB_ANON }, /^eyJ/.test(SB_ANON) ? { Authorization: 'Bearer ' + SB_ANON } : {}), body: JSON.stringify(args) });
+  if (!r.ok){ let m = 'เกิดข้อผิดพลาด (' + r.status + ')'; try{ const e = await r.json(); m = e.message || m; }catch(x){} throw new Error(m); }
   const j = await r.json();
   if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
   return j;
@@ -231,8 +242,8 @@ async function api(body){
 
 /* ---------- เริ่มต้น ---------- */
 async function start(){
-  if (typeof API_URL === 'undefined' || typeof LIFF_ID === 'undefined')
-    return fail('บรรทัดตั้งค่าด้านบนของไฟล์ index.html ผิดรูปแบบ (เช่น เครื่องหมาย \' หาย) — ต้องเป็นแบบนี้: const API_URL = \'https://script.google.com/macros/s/.../exec\';  และ  const LIFF_ID = \'\';');
+  if (typeof SB_URL === 'undefined' || typeof SB_ANON === 'undefined' || typeof LIFF_ID === 'undefined')
+    return fail('บรรทัดตั้งค่าด้านบนของไฟล์ index.html ผิดรูปแบบ (เช่น เครื่องหมาย \' หาย) — ตรวจ 3 บรรทัด SB_URL / SB_ANON / LIFF_ID ให้อยู่ในเครื่องหมาย \' \' และลงท้ายด้วย ;');
   try{
     if (LIFF_ID){
       $('loadMsg').textContent = 'กำลังเชื่อมต่อ LINE…';
@@ -281,7 +292,7 @@ async function doRegister(){
 async function doRegisterAdmin(){
   $('admMsg').innerHTML = '';
   try{
-    await api({ action:'registerAdmin', uid:S.uid, lineName:S.lineName, name:$('admName').value.trim(), key:$('admPw').value });
+    await api({ action:'registerAdmin', uid:S.uid, lineName:S.lineName, name:$('admName').value.trim(), key:$('admPw').value.trim() });
     $('admMsg').innerHTML = '<div class="note ok">✓ ลงทะเบียนเรียบร้อย บัญชีนี้จะได้รับแจ้งเตือนการลางาน</div>';
   }catch(e){ $('admMsg').innerHTML = '<div class="note bad">'+esc(e.message)+'</div>'; }
 }
@@ -412,7 +423,7 @@ async function doSubmit(){
     S.data.myLeaves = [ {no:L.no,type:L.type,typeOther:L.typeOther,start:L.start,end:L.end,period:L.period,days:L.days,reason:L.reason}, ...(S.data.myLeaves||[]) ]
       .filter(x => S.data.cycle && x.start>=S.data.cycle.start && x.start<=S.data.cycle.end).sort((a,b)=>b.start.localeCompare(a.start));
     renderBalance(); renderHist();
-    $('doneNote').textContent = /^สำเร็จ/.test(res.notify.line) ? 'แจ้งแอดมินทาง LINE แล้ว' : 'บันทึกในระบบแล้ว';
+    $('doneNote').textContent = 'บันทึกแล้ว · ระบบกำลังแจ้งแอดมินทาง LINE';
     $('doneKv').innerHTML = [
       ['เลขที่', L.no], ['ชื่อ', L.name + (L.nick?' ('+L.nick+')':'')], ['ประเภท', L.type==='อื่นๆ'?'อื่นๆ ('+L.typeOther+')':L.type],
       ['วันที่', be(L.start) + (L.end!==L.start?' – '+be(L.end):'')], ['ช่วงเวลา', L.period], ['จำนวน', num(L.days)+' วัน'], ['สาเหตุ', L.reason]

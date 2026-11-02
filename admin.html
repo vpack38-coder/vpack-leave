@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>จัดการใบลา V-pack</title>
 <script>
-  const API_URL = 'https://script.google.com/macros/s/AKfycbyHzI072AVOtZCTfLLBZ5mg5_sEs3oaPGUWcUNI3EbbNr3NZGP8kyBkHwH9Govup2k/exec';   // ลงท้ายด้วย /exec (ตัวเดียวกับ index.html)
+  const SB_URL  = 'https://arcafornkumgbxdzmdob.supabase.co';        // ตัวเดียวกับ index.html
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyY2Fmb3Jua3VtZ2J4ZHptZG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MTY4NTAsImV4cCI6MjEwOTE5Mjg1MH0.dBaUZO5UHHsRfKsTtIJhI4Qx3t5V1cX3npKMo3J4Exw';    // ตัวเดียวกับ index.html
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
 </script>
 <style>
 :root{
@@ -112,8 +116,9 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-
   <!-- เข้าสู่ระบบ -->
   <section id="vLogin" class="card login">
     <h1>เข้าสู่ระบบ</h1>
-    <div class="muted" style="font-size:16px;margin-bottom:12px">ใช้รหัสผ่านในชีต "ตั้งค่า" (ADMIN_PASSWORD)</div>
-    <input type="password" id="pw" placeholder="รหัสผ่าน" style="width:100%" onkeydown="if(event.key==='Enter')login()">
+    <div class="muted" style="font-size:16px;margin-bottom:12px">ใช้อีเมลและรหัสผ่านที่สร้างไว้ใน Supabase (Authentication &gt; Users)</div>
+    <input type="email" id="em" placeholder="อีเมล" style="width:100%;margin-bottom:8px" autocomplete="username">
+    <input type="password" id="pw" placeholder="รหัสผ่าน" style="width:100%" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
     <button class="btn" style="width:100%;margin-top:10px;padding:10px" onclick="login()">เข้าสู่ระบบ</button>
     <div id="loginMsg"></div>
   </section>
@@ -186,7 +191,7 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-
     </div>
     <div class="card">
       <div class="h2">วันหยุดบริษัท และรอบปี</div>
-      <div class="sub" style="margin-bottom:8px">แก้ไขได้ในชีต "วันหยุด" และ "รอบปี" ของ Google Sheets (เพิ่มปีใหม่ทุกต้นปี)</div>
+      <div class="sub" style="margin-bottom:8px">แก้ไขได้ใน Supabase &gt; Table Editor ตาราง holidays และ cycles (เพิ่มปีใหม่ทุกปี)</div>
       <div id="cycList"></div>
       <div id="holList" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
@@ -261,29 +266,125 @@ function lsSet(k,v){ try{ v==null?localStorage.removeItem(k):localStorage.setIte
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2600); }
 function msg(id,text,kind){ $(id).innerHTML = text ? `<div class="msg ${kind||'bad'}">${esc(text)}</div>` : ''; }
 
+/* ---------- เชื่อมต่อ Supabase ---------- */
+let SB = null, SHOWN = false;
+const TYPES = ['ลาป่วย','ลากิจ','ลาพักร้อน','ลาคลอด','อุบัติเหตุจากการทำงาน(กท.)','อื่นๆ'];
+function sb(){
+  if (typeof SB_URL === 'undefined' || typeof SB_ANON === 'undefined') throw new Error('บรรทัดตั้งค่า SB_URL / SB_ANON ด้านบนของไฟล์ admin.html ผิดรูปแบบ');
+  if (!/^https:\/\/.+\.supabase\.co/.test(SB_URL) || SB_ANON.length < 30) throw new Error('ยังไม่ได้ใส่ SB_URL / SB_ANON ในไฟล์ admin.html');
+  if (!SB) SB = supabase.createClient(SB_URL, SB_ANON, { auth: { persistSession: true, storageKey: 'vpack-leave-auth' } });
+  return SB;
+}
+const chk = ({ data, error }) => { if (error) throw new Error(error.message); return data; };
+const FMT_TS = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Bangkok', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hourCycle:'h23' });
+function tsBE(iso){ if(!iso) return ''; const p = FMT_TS.formatToParts(new Date(iso)), g = t => (p.find(x=>x.type===t)||{}).value; return `${g('day')}/${g('month')}/${+g('year')+543} ${g('hour')}:${g('minute')}`; }
+function dateTH(d){ return new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Bangkok' }).format(d); }
+function addDays(iso,n){ const d=new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+const L2C = r => ({ no:r.no, ts:tsBE(r.ts), tsIso:r.ts, empId:r.emp_id||'', name:r.name||'', nick:r.nick||'', dept:r.dept||'', type:r.type,
+  typeOther:r.type_other||'', reason:r.reason||'', start:r.start_date, end:r.end_date||r.start_date, period:r.period||'เต็มวัน', days:+r.days||0,
+  phone:r.phone||'', retro:r.retro?'ย้อนหลัง':'', hip:!!r.hip, medCert:!!r.med_cert, note:r.note||'', lineStatus:r.line_status||'',
+  mailStatus:r.mail_status||'', source:r.source||'' });
+const E2C = r => ({ id:r.id, title:r.title||'', name:r.name||'', nameEn:r.name_en||'', nick:r.nick||'', dept:r.dept||'', vac:+r.vac||0,
+  phone:r.phone||'', startDate:r.start_date||'', status:r.status||'ทำงาน', linked:!!r.line_uid, lineName:r.line_name||'' });
+function withEnds(cs){
+  cs.sort((a,b)=>a.start.localeCompare(b.start));
+  cs.forEach((c,i)=>{ c.end = cs[i+1] ? addDays(cs[i+1].start,-1) : addDays((+c.start.slice(0,4)+1)+c.start.slice(4),-1); });
+  return cs;
+}
+
 async function api(body){
-  if (typeof API_URL === 'undefined') throw new Error('บรรทัดตั้งค่า API_URL ด้านบนของไฟล์ admin.html ผิดรูปแบบ (เช่น เครื่องหมาย \' หาย)');
-  if (!/^https:\/\/script\.google/.test(API_URL)) throw new Error('ยังไม่ได้ใส่ API_URL ในไฟล์ admin.html');
-  const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(Object.assign({key:KEY}, body)) });
-  const j = await r.json();
-  if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
-  return j;
+  const c = sb();
+  switch (body.action){
+    case 'adminData': {
+      const [emps, lv, hol, cyc, adm, st] = (await Promise.all([
+        c.from('employees').select('*').order('id'),
+        c.from('leaves').select('*').order('start_date', { ascending:false }).limit(10000),
+        c.from('holidays').select('*').order('d'),
+        c.from('cycles').select('*'),
+        c.from('admins').select('*').order('ts'),
+        c.from('settings').select('k,v')
+      ])).map(chk);
+      if (!st.length) throw new Error('บัญชีนี้ยังไม่มีสิทธิ์เข้าหน้าจัดการ (ต้องเพิ่มอีเมลในตาราง web_admins)');
+      const S = {}; st.forEach(x => S[x.k] = x.v || '');
+      return { ok:true, today: dateTH(new Date()), types: TYPES,
+        employees: emps.map(E2C), leaves: lv.map(L2C),
+        holidays: hol.map(h => ({ date:h.d, name:h.name||'' })),
+        cycles: withEnds(cyc.map(x => ({ year:x.year, start:x.start_date }))),
+        admins: adm.map(a => ({ uid:a.line_uid, lineName:a.line_name||'', name:a.name||'', ts:tsBE(a.ts), notify:!!a.notify })),
+        rules: { sick:+S.SICK_DAYS||30, personal:+S.PERSONAL_DAYS||3, hoursPerDay:+S.HOURS_PER_DAY||8 },
+        settings: { NOTIFY_EMAILS:S.NOTIFY_EMAILS||'', LIFF_ID:S.LIFF_ID||'' },
+        notifyReady: !!(S.NOTIFY_URL && S.NOTIFY_SECRET) };
+    }
+    case 'setHip':
+      chk(await c.from('leaves').update({ [body.field==='medCert' ? 'med_cert' : 'hip']: body.value===true }).eq('no', body.no)); return { ok:true };
+    case 'saveLeave': {
+      const L = body.leave, e = empById(L.empId);
+      if (!e) throw new Error('กรุณาเลือกพนักงาน');
+      if (!L.start || !L.end || L.end < L.start) throw new Error('วันที่ไม่ถูกต้อง');
+      const row = { emp_id:e.id, name:e.name, nick:e.nick, dept:e.dept, type:L.type, type_other: L.type==='อื่นๆ' ? (L.typeOther||null) : null,
+        reason:L.reason, start_date:L.start, end_date:L.end, period:L.period||'เต็มวัน', days:+L.days||0, phone:L.phone, note:L.note,
+        hip:!!L.hip, med_cert:!!L.medCert };
+      if (L.no){
+        const old = D.leaves.find(x => x.no===L.no);
+        row.retro = L.start < (old && old.tsIso ? dateTH(new Date(old.tsIso)) : D.today);
+        const d = chk(await c.from('leaves').update(row).eq('no', L.no).select());
+        if (!d.length) throw new Error('ใบลา ' + L.no + ' ถูกลบไปแล้ว');
+        return { ok:true, leave:L2C(d[0]) };
+      }
+      Object.assign(row, { retro: L.start < D.today, source:'แอดมินบันทึก', notify_req: !!body.notify });
+      const d = chk(await c.from('leaves').insert(row).select());
+      return { ok:true, leave:L2C(d[0]) };
+    }
+    case 'deleteLeave':
+      chk(await c.from('leaves').delete().eq('no', body.no)); return { ok:true };
+    case 'resend': {
+      const r = chk(await c.rpc('leave_resend', { p_no: body.no }));
+      return { ok:true, notify:{ line: r + ' (รอสักครู่แล้วกดรีเฟรช)', mail: r } };
+    }
+    case 'saveEmployee': {
+      const E = body.employee;
+      if (!String(E.name||'').trim()) throw new Error('กรุณากรอกชื่อ-นามสกุล');
+      const row = { title:E.title, name:E.name, name_en:E.nameEn, nick:E.nick, dept:E.dept, vac:+E.vac||0, phone:E.phone, start_date:E.startDate, status:E.status||'ทำงาน' };
+      if (E.id){ chk(await c.from('employees').update(row).eq('id', E.id)); return { ok:true, id:E.id }; }
+      const n = Math.max(0, ...D.employees.map(x => parseInt(String(x.id).replace(/\D/g,''),10)||0)) + 1;
+      const id = 'E' + String(n).padStart(2,'0');
+      chk(await c.from('employees').insert(Object.assign({ id }, row))); return { ok:true, id };
+    }
+    case 'unlinkLine':
+      chk(await c.from('employees').update({ line_uid:null, line_name:null }).eq('id', body.empId)); return { ok:true };
+    case 'setAdminNotify':
+      chk(await c.from('admins').update({ notify: body.value===true }).eq('line_uid', body.uid)); return { ok:true };
+    case 'removeAdmin':
+      chk(await c.from('admins').delete().eq('line_uid', body.uid)); return { ok:true };
+    case 'saveSetting':
+      chk(await c.from('settings').upsert({ k: body.name, v: body.value })); return { ok:true };
+  }
+  throw new Error('ไม่รู้จักคำสั่ง ' + body.action);
 }
 
 /* ---------- เข้าสู่ระบบ ---------- */
 async function login(){
-  KEY = $('pw').value; msg('loginMsg','');
-  try{ await loadAll(); lsSet('vpack_leave_key', KEY); }
-  catch(e){ msg('loginMsg', e.message); }
+  msg('loginMsg','');
+  try{
+    const { error } = await sb().auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+    if (error) throw new Error(/invalid login/i.test(error.message) ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : error.message);
+    await loadAll();
+  }catch(e){ msg('loginMsg', e.message); }
 }
-function logout(){ lsSet('vpack_leave_key', null); location.reload(); }
-async function loadAll(){
-  D = await api({ action:'adminData' });
+async function logout(){ try{ await sb().auth.signOut(); }catch(e){} lsSet('vpack_leave_cache', null); location.reload(); }
+function showApp(){
   $('vLogin').classList.add('hidden'); $('nav').classList.remove('hidden');
-  initFilters(); renderAll();
-  showTab(lsGet('vpack_leave_tab') || 'leaves');
+  if (!SHOWN){ initFilters(); SHOWN = true; }
+  renderAll();
 }
-async function reload(){ try{ D = await api({ action:'adminData' }); renderAll(); toast('อัปเดตข้อมูลแล้ว'); }catch(e){ toast(e.message); } }
+async function loadAll(){
+  const first = !SHOWN;
+  D = await api({ action:'adminData' });
+  lsSet('vpack_leave_cache', JSON.stringify(D));
+  showApp();
+  if (first) showTab(lsGet('vpack_leave_tab') || 'leaves');
+}
+async function reload(){ try{ D = await api({ action:'adminData' }); lsSet('vpack_leave_cache', JSON.stringify(D)); renderAll(); toast('อัปเดตข้อมูลแล้ว'); }catch(e){ toast(e.message); } }
 
 document.querySelectorAll('nav button[data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 function showTab(t){
@@ -520,11 +621,11 @@ async function unlink(id){
 
 /* ---------- ตั้งค่า ---------- */
 function renderSettings(){
-  $('tokenMsg').innerHTML = D.lineTokenSet ? '' : '<div class="msg warn" style="margin:0 0 10px">ยังไม่ได้ใส่ LINE_TOKEN ใน Script Properties — ระบบจะยังไม่ส่ง LINE (อีเมลยังส่งได้)</div>';
+  $('tokenMsg').innerHTML = D.notifyReady ? '' : '<div class="msg warn" style="margin:0 0 10px">ยังไม่ได้ตั้งค่า NOTIFY_URL / NOTIFY_SECRET — ให้รัน migrateToSupabase ใน Apps Script ก่อน ระบบถึงจะส่ง LINE และอีเมลได้</div>';
   $('tbAdmins').innerHTML = D.admins.map(a => `<tr><td><b>${esc(a.name)}</b></td><td>${esc(a.lineName)}</td><td class="sub">${esc(a.ts)}</td>
     <td><input type="checkbox" class="chk" ${a.notify?'checked':''} onchange="adminNotify('${esc(a.uid)}',this)"></td>
     <td><button class="btn danger sm" onclick="removeAdmin('${esc(a.uid)}','${esc(a.name)}')">ลบ</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">ยังไม่มีแอดมิน</td></tr>';
-  $('admLink').textContent = D.settings.LIFF_ID ? 'https://liff.line.me/' + D.settings.LIFF_ID + '?mode=admin' : '(ใส่ LIFF_ID ในชีต "ตั้งค่า" ก่อน)';
+  $('admLink').textContent = D.settings.LIFF_ID ? 'https://liff.line.me/' + D.settings.LIFF_ID + '?mode=admin' : '(ใส่ LIFF_ID ในตาราง settings ของ Supabase ก่อน)';
   $('setEmails').value = D.settings.NOTIFY_EMAILS;
   $('cycList').innerHTML = D.cycles.map(c => `<div>รอบปี <b>${c.year}</b>: ${be(c.start)} – ${be(c.end)}</div>`).join('');
   $('holList').innerHTML = D.holidays.map(h => `<span class="tag src" title="${esc(h.name)}">${be(h.date)} ${esc(h.name)}</span>`).join('');
@@ -547,8 +648,14 @@ function exportCSV(){
 
 /* ---------- start ---------- */
 (async () => {
-  const k = lsGet('vpack_leave_key');
-  if (k){ KEY = k; try{ await loadAll(); }catch(e){ lsSet('vpack_leave_key', null); msg('loginMsg', e.message); } }
+  lsSet('vpack_leave_key', null);
+  let session = null;
+  try{ session = (await sb().auth.getSession()).data.session; }catch(e){ msg('loginMsg', e.message); return; }
+  if (!session) return;
+  // โชว์ข้อมูลรอบล่าสุดที่จำไว้ทันที แล้วค่อยอัปเดตตามมา
+  const cache = lsGet('vpack_leave_cache');
+  if (cache){ try{ D = JSON.parse(cache); showApp(); showTab(lsGet('vpack_leave_tab') || 'leaves'); }catch(e){} }
+  try{ await loadAll(); }catch(e){ if (!SHOWN) msg('loginMsg', e.message); else toast(e.message); }
 })();
 </script>
 </body>
