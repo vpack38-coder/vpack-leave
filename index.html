@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>แจ้งลางาน V-pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<!-- ===================== ตั้งค่า (แก้ 2 บรรทัดนี้) ===================== -->
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbyHzI072AVOtZCTfLLBZ5mg5_sEs3oaPGUWcUNI3EbbNr3NZGP8kyBkHwH9Govup2k/exec';   // ลงท้ายด้วย /exec
+  const LIFF_ID = '';                                          // ว่างไว้ = โหมดทดสอบ (เปิดในเบราว์เซอร์ได้เลย)
+</script>
+<style>
+:root{
+  --brand:#d24a0e; --brand-d:#a83a0a; --brand-l:#fdece4; --green:#5aa62b;
+  --ink:#1f1a17; --muted:#6f6660; --line:#ebe3de; --bg:#f7f3f0; --card:#fff;
+  --ok:#1f8a4c; --ok-l:#e5f5ec; --warn:#b26a00; --warn-l:#fff4e0; --bad:#c62828; --bad-l:#fdeaea;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Thai',system-ui,sans-serif;font-size:16px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 120px}
+header.top{background:var(--brand);color:#fff;padding:18px 16px 46px;border-radius:0 0 22px 22px}
+header.top .in{max-width:520px;margin:0 auto;padding:0 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px}
+.brand .logo{background:#fff;color:var(--brand);border-radius:10px;padding:2px 9px;font-size:17px;letter-spacing:.3px}
+.brand .logo b{color:var(--green)}
+.sub{opacity:.9;font-size:14px;margin-top:2px}
+.card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(80,40,20,.06);margin-top:14px}
+.card.lift{margin-top:-30px}
+.me{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.me .hi{font-size:19px;font-weight:700}
+.me .dept{color:var(--muted);font-size:14px}
+.link{background:none;border:0;color:var(--brand);font-size:14px;text-decoration:underline;cursor:pointer;padding:0;white-space:nowrap}
+.bal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.bal div{background:var(--bg);border-radius:12px;padding:9px 8px;text-align:center}
+.bal .n{font-size:22px;font-weight:700;line-height:1.2}
+.bal .n small{font-size:13px;color:var(--muted);font-weight:500}
+.bal .l{font-size:12px;color:var(--muted)}
+.bal .over .n{color:var(--bad)}
+.cyc{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+h2{font-size:16px;margin:0 0 10px}
+label.f{display:block;font-weight:600;font-size:15px;margin:16px 0 6px}
+label.f:first-child{margin-top:0}
+.req{color:var(--brand)}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;font-size:15px;transition:.15s}
+.chip.on{border-color:var(--brand);background:var(--brand-l);color:var(--brand-d);font-weight:600}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:none;border-radius:9px;padding:8px 2px;font-size:14px;cursor:pointer}
+.seg button.on{background:#fff;color:var(--brand-d);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+input[type=text],input[type=tel],input[type=date],input[type=password],select,textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff;outline:none;min-height:46px}
+input:focus,select:focus,textarea:focus{border-color:var(--brand)}
+textarea{min-height:80px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2>div{min-width:0}
+input[type=date]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:none}
+.be{font-size:13px;color:var(--muted);margin-top:4px;min-height:19px}
+.sum{border-radius:12px;padding:12px;margin-top:14px;background:var(--bg);font-size:14px}
+.sum .big{font-size:18px;font-weight:700}
+.note{border-radius:10px;padding:8px 10px;font-size:13.5px;margin-top:8px}
+.note.warn{background:var(--warn-l);color:var(--warn)}
+.note.bad{background:var(--bad-l);color:var(--bad)}
+.note.ok{background:var(--ok-l);color:var(--ok)}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:14px;font-size:17px;font-weight:700;cursor:pointer;background:var(--brand);color:#fff}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 70%,rgba(247,243,240,0))}
+.bar .in{max-width:520px;margin:0 auto}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.hist li:first-child{border-top:0}
+.hist .t{font-weight:600}
+.hist .d{color:var(--muted);font-size:13px}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:8px}
+.center{text-align:center}
+.spin{width:38px;height:38px;border:4px solid var(--brand-l);border-top-color:var(--brand);border-radius:50%;animation:sp 1s linear infinite;margin:40px auto 12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.check{width:72px;height:72px;border-radius:50%;background:var(--ok-l);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:40px;margin:6px auto 10px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;margin-top:10px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:500}
+.test{background:#fff4e0;color:#8a5300;font-size:12.5px;text-align:center;padding:6px 16px}
+.hidden{display:none!important}
+.emplist{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow:auto}
+.emp{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:#fff;text-align:left}
+.emp.on{border-color:var(--brand);background:var(--brand-l)}
+.emp b{display:block}
+.emp span{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="testBar" class="test hidden">โหมดทดสอบ — ยังไม่ได้ใส่ LIFF_ID (ข้อมูลจะบันทึกจริงลง Google Sheets)</div>
+<header class="top"><div class="in">
+  <div class="brand"><span class="logo"><b>V</b>-pack</span> แจ้งลางาน</div>
+  <div class="sub" id="subTitle">บริษัท วี แพค การพิมพ์และบรรจุภัณฑ์ จำกัด</div>
+</div></header>
+
+<main class="wrap">
+  <!-- กำลังโหลด -->
+  <section id="vLoading" class="card lift center"><div class="spin"></div><div id="loadMsg">กำลังโหลด…</div></section>
+
+  <!-- ผิดพลาด -->
+  <section id="vError" class="card lift center hidden">
+    <div style="font-size:40px">⚠️</div>
+    <div id="errMsg" style="margin:8px 0 14px"></div>
+    <button class="btn ghost" onclick="location.reload()">ลองใหม่</button>
+  </section>
+
+  <!-- เลือกชื่อ (ครั้งแรก) -->
+  <section id="vRegister" class="hidden">
+    <div class="card lift">
+      <h2>ครั้งแรก: เลือกชื่อของคุณ</h2>
+      <div class="dept" style="color:var(--muted);font-size:14px;margin-bottom:10px">เลือกครั้งเดียว ครั้งต่อไประบบจะจำบัญชี LINE <b id="lineNameR"></b> ได้เอง</div>
+      <input type="text" id="empSearch" placeholder="🔍 ค้นหาชื่อ / ชื่อเล่น" oninput="renderEmpList()">
+      <div class="emplist" id="empList" style="margin-top:10px"></div>
+    </div>
+    <div class="bar"><div class="in"><button class="btn" id="btnReg" disabled onclick="doRegister()">ยืนยัน</button></div></div>
+  </section>
+
+  <!-- ลงทะเบียนแอดมิน -->
+  <section id="vAdmin" class="hidden">
+    <div class="card lift">
+      <h2>ลงทะเบียนแอดมินรับแจ้งเตือน</h2>
+      <div style="color:var(--muted);font-size:14px">บัญชี LINE: <b id="lineNameA"></b><br>เมื่อลงทะเบียนแล้ว ทุกครั้งที่มีคนแจ้งลา LINE OA จะส่งข้อความมาหาบัญชีนี้</div>
+      <label class="f">ชื่อแอดมิน</label>
+      <input type="text" id="admName" placeholder="เช่น คุณแหม่ม">
+      <label class="f">รหัสผ่านแอดมิน</label>
+      <input type="password" id="admPw" placeholder="รหัสผ่านหน้าจัดการ">
+      <div id="admMsg"></div>
+      <button class="btn" style="margin-top:16px" onclick="doRegisterAdmin()">ลงทะเบียน</button>
+      <button class="btn ghost" style="margin-top:10px" onclick="goForm()">ไปหน้าแจ้งลา</button>
+    </div>
+  </section>
+
+  <!-- ฟอร์มแจ้งลา -->
+  <section id="vForm" class="hidden">
+    <div class="card lift">
+      <div class="me">
+        <div><div class="hi" id="meHi"></div><div class="dept" id="meDept"></div></div>
+        <button class="link" onclick="showRegister()">ไม่ใช่คุณ?</button>
+      </div>
+      <div class="bal" id="bal"></div>
+      <div class="cyc" id="cycText"></div>
+    </div>
+
+    <div class="card">
+      <label class="f">ประเภทการลา <span class="req">*</span></label>
+      <div class="chips" id="typeChips"></div>
+      <input type="text" id="typeOther" class="hidden" placeholder="ระบุประเภทการลา" style="margin-top:8px">
+
+      <label class="f">ช่วงเวลา</label>
+      <div class="seg" id="seg">
+        <button data-p="full" class="on">เต็มวัน</button>
+        <button data-p="morning">ครึ่งเช้า</button>
+        <button data-p="afternoon">ครึ่งบ่าย</button>
+        <button data-p="hours">ระบุเวลา</button>
+      </div>
+
+      <div class="row2" style="margin-top:14px">
+        <div>
+          <label class="f" style="margin-top:0" id="lblStart">ตั้งแต่วันที่ <span class="req">*</span></label>
+          <input type="date" id="dStart">
+          <div class="be" id="beStart"></div>
+        </div>
+        <div id="boxEnd">
+          <label class="f" style="margin-top:0">ถึงวันที่ <span class="req">*</span></label>
+          <input type="date" id="dEnd">
+          <div class="be" id="beEnd"></div>
+        </div>
+      </div>
+      <div class="row2 hidden" id="boxTime" style="margin-top:4px">
+        <div><label class="f" style="margin-top:6px">ตั้งแต่เวลา</label><select id="tFrom"></select></div>
+        <div><label class="f" style="margin-top:6px">ถึงเวลา</label><select id="tTo"></select></div>
+      </div>
+
+      <div class="sum" id="sum"></div>
+
+      <label class="f">สาเหตุการลา <span class="req">*</span></label>
+      <textarea id="reason" placeholder="เช่น ไม่สบาย มีไข้ / หมอนัด / ธุระที่บ้าน"></textarea>
+
+      <label class="f">เบอร์ติดต่อระหว่างลา</label>
+      <input type="tel" id="phone" inputmode="tel" placeholder="08x-xxx-xxxx">
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>ประวัติการลาของฉัน (รอบปีนี้)</h2>
+      <ul class="hist" id="hist"></ul>
+    </div>
+    <div class="bar"><div class="in"><button class="btn" id="btnSubmit" onclick="doSubmit()">ส่งใบลา</button></div></div>
+  </section>
+
+  <!-- ส่งสำเร็จ -->
+  <section id="vDone" class="hidden">
+    <div class="card lift center">
+      <div class="check">✓</div>
+      <div style="font-size:20px;font-weight:700">ส่งใบลาเรียบร้อย</div>
+      <div id="doneNote" style="color:var(--muted);font-size:14px"></div>
+      <dl class="kv" id="doneKv" style="text-align:left"></dl>
+    </div>
+    <button class="btn" style="margin-top:16px" onclick="closeApp()">ปิดหน้านี้</button>
+    <button class="btn ghost" style="margin-top:10px" onclick="newLeave()">แจ้งลาอีกรายการ</button>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const VIEWS = ['vLoading','vError','vRegister','vAdmin','vForm','vDone'];
+const TH_MONTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_DAY = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+let S = { uid:'', lineName:'', data:null, type:'', period:'full', pickEmp:'' };
+
+function show(v){ VIEWS.forEach(x => $(x).classList.toggle('hidden', x !== v)); window.scrollTo(0,0); }
+function fail(msg){ $('errMsg').textContent = msg; show('vError'); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function be(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+(+y+543); }
+function beLong(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return 'วัน'+TH_DAY[d.getDay()]+'ที่ '+d.getDate()+' '+TH_MONTH[d.getMonth()]+' '+(d.getFullYear()+543); }
+function num(n){ return String(Math.round(n*100)/100); }
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+async function api(body){
+  if (!/^https:\/\/script\.google/.test(API_URL)) throw new Error('ยังไม่ได้ใส่ API_URL ในไฟล์ index.html');
+  const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j;
+}
+
+/* ---------- เริ่มต้น ---------- */
+async function start(){
+  if (typeof API_URL === 'undefined' || typeof LIFF_ID === 'undefined')
+    return fail('บรรทัดตั้งค่าด้านบนของไฟล์ index.html ผิดรูปแบบ (เช่น เครื่องหมาย \' หาย) — ต้องเป็นแบบนี้: const API_URL = \'https://script.google.com/macros/s/.../exec\';  และ  const LIFF_ID = \'\';');
+  try{
+    if (LIFF_ID){
+      $('loadMsg').textContent = 'กำลังเชื่อมต่อ LINE…';
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()){ liff.login({ redirectUri: location.href }); return; }
+      const prof = await liff.getProfile();
+      S.uid = prof.userId; S.lineName = prof.displayName;
+    } else {
+      $('testBar').classList.remove('hidden');
+      S.uid = lsGet('vpack_test_uid') || ('TEST-' + Math.random().toString(36).slice(2,8));
+      lsSet('vpack_test_uid', S.uid);
+      S.lineName = 'ทดสอบ (' + S.uid + ')';
+    }
+    $('loadMsg').textContent = 'กำลังโหลดข้อมูล…';
+    S.data = await api({ action:'init', uid:S.uid });
+    const mode = new URLSearchParams(location.search).get('mode');
+    if (mode === 'admin'){ $('lineNameA').textContent = S.lineName; $('admName').value = S.lineName; show('vAdmin'); return; }
+    route();
+  }catch(e){ fail(e.message); }
+}
+
+function route(){ if (S.data.me) renderForm(); else showRegister(); }
+
+/* ---------- เลือกชื่อ ---------- */
+function showRegister(){
+  $('lineNameR').textContent = S.lineName;
+  S.pickEmp = S.data.me ? S.data.me.id : '';
+  $('empSearch').value = '';
+  renderEmpList(); show('vRegister');
+}
+function renderEmpList(){
+  const q = $('empSearch').value.trim().toLowerCase();
+  const list = S.data.employees.filter(e => !q || (e.name+' '+e.nick+' '+e.dept).toLowerCase().includes(q));
+  $('empList').innerHTML = list.map(e => `<button class="emp ${e.id===S.pickEmp?'on':''}" onclick="pickEmp('${e.id}')"><b>${esc(e.name)} (${esc(e.nick)})</b><span>${esc(e.dept)}</span></button>`).join('') || '<div class="empty">ไม่พบชื่อ</div>';
+  $('btnReg').disabled = !S.pickEmp;
+}
+function pickEmp(id){ S.pickEmp = id; renderEmpList(); }
+async function doRegister(){
+  const b = $('btnReg'); b.disabled = true; b.textContent = 'กำลังบันทึก…';
+  try{ S.data = await api({ action:'register', uid:S.uid, lineName:S.lineName, empId:S.pickEmp }); renderForm(); }
+  catch(e){ alertBox('formMsg', e.message); fail(e.message); }
+  finally{ b.textContent = 'ยืนยัน'; }
+}
+
+/* ---------- แอดมิน ---------- */
+async function doRegisterAdmin(){
+  $('admMsg').innerHTML = '';
+  try{
+    await api({ action:'registerAdmin', uid:S.uid, lineName:S.lineName, name:$('admName').value.trim(), key:$('admPw').value });
+    $('admMsg').innerHTML = '<div class="note ok">✓ ลงทะเบียนเรียบร้อย บัญชีนี้จะได้รับแจ้งเตือนการลางาน</div>';
+  }catch(e){ $('admMsg').innerHTML = '<div class="note bad">'+esc(e.message)+'</div>'; }
+}
+function goForm(){ history.replaceState(null,'',location.pathname); route(); }
+
+/* ---------- ฟอร์ม ---------- */
+function renderForm(){
+  const d = S.data, me = d.me;
+  $('meHi').textContent = 'สวัสดี ' + (me.nick || me.name) + ' 👋';
+  $('meDept').textContent = me.name + ' · ' + me.dept;
+  renderBalance();
+  $('typeChips').innerHTML = d.types.map(t => `<button class="chip" data-t="${esc(t)}">${esc(t)}</button>`).join('');
+  $('typeChips').querySelectorAll('.chip').forEach(c => c.onclick = () => { S.type = c.dataset.t; refresh(); });
+  const times = []; for (let h=7; h<=18; h++){ ['00','30'].forEach(m => { if(!(h===18&&m==='30')) times.push(String(h).padStart(2,'0')+':'+m); }); }
+  $('tFrom').innerHTML = times.map(t=>`<option ${t==='08:00'?'selected':''}>${t}</option>`).join('');
+  $('tTo').innerHTML = times.map(t=>`<option ${t==='10:00'?'selected':''}>${t}</option>`).join('');
+  newLeave(true);
+  renderHist();
+  show('vForm');
+}
+
+function renderBalance(){
+  const d = S.data, me = d.me, u = d.usage, r = d.rules;
+  if (!u){ $('bal').innerHTML=''; $('cycText').textContent='ยังไม่ได้ตั้งรอบปีสำหรับวันนี้'; return; }
+  const tile = (label, used, ent, mode) => {
+    const left = Math.round((ent-used)*100)/100;
+    const over = used > ent;
+    return mode==='left'
+      ? `<div class="${over?'over':''}"><div class="n">${num(left)}<small>/${ent}</small></div><div class="l">${label}<br>คงเหลือ</div></div>`
+      : `<div class="${over?'over':''}"><div class="n">${num(used)}<small>/${ent}</small></div><div class="l">${label}<br>ใช้ไป</div></div>`;
+  };
+  $('bal').innerHTML = tile('พักร้อน', u['ลาพักร้อน'].days, me.vac, 'left') + tile('ลากิจ', u['ลากิจ'].days, r.personal, 'left') + tile('ลาป่วย', u['ลาป่วย'].days, r.sick, 'used');
+  $('cycText').textContent = 'รอบปี ' + d.cycle.year + ' (' + be(d.cycle.start) + ' – ' + be(d.cycle.end) + ') · นับเป็นวัน';
+}
+
+function renderHist(){
+  const L = S.data.myLeaves || [];
+  $('hist').innerHTML = L.length ? L.map(l => `<li><div><div class="t">${esc(l.type==='อื่นๆ'&&l.typeOther?l.typeOther:l.type)}</div><div class="d">${be(l.start)}${l.end!==l.start?' – '+be(l.end):''} · ${esc(l.period)}</div></div><div class="t">${num(l.days)} วัน</div></li>`).join('') : '<li class="empty">ยังไม่มีการลาในรอบปีนี้</li>';
+}
+
+function newLeave(keepView){
+  S.type = ''; S.period = 'full';
+  const t = S.data.today;
+  $('dStart').value = t; $('dEnd').value = t;
+  $('reason').value = ''; $('typeOther').value = '';
+  $('phone').value = S.data.me.phone || '';
+  $('formMsg').innerHTML = '';
+  refresh();
+  if (keepView !== true) show('vForm');
+}
+
+$('seg').querySelectorAll('button').forEach(b => b.onclick = () => { S.period = b.dataset.p; refresh(); });
+['dStart','dEnd','tFrom','tTo'].forEach(id => $(id).addEventListener('change', () => {
+  if (id==='dStart' && $('dEnd').value < $('dStart').value) $('dEnd').value = $('dStart').value;
+  refresh();
+}));
+
+function holMap(){ const m={}; (S.data.holidays||[]).forEach(h => m[h.date]=h.name||'วันหยุด'); return m; }
+function toMin(t){ const [h,m]=t.split(':'); return +h*60 + +m; }
+
+function calc(){
+  const hm = holMap(), s = $('dStart').value, p = S.period;
+  const e = p==='full' ? $('dEnd').value : s;
+  if (!s || !e) return { error:'กรุณาเลือกวันที่' };
+  if (e < s) return { error:'วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม' };
+  let work=0, sun=0, hols=[];
+  const d = new Date(s+'T00:00:00Z'), end = new Date(e+'T00:00:00Z');
+  while (d <= end){ const iso=d.toISOString().slice(0,10); if (d.getUTCDay()===0) sun++; else if (hm[iso]) hols.push(hm[iso]); else work++; d.setUTCDate(d.getUTCDate()+1); }
+  if (work === 0) return { error:'วันที่เลือกเป็นวันหยุด (วันอาทิตย์หรือวันหยุดบริษัท)', sun, hols };
+  if (p==='full') return { days:work, sun, hols };
+  if (p==='morning'||p==='afternoon') return { days:0.5, sun, hols };
+  const f=toMin($('tFrom').value), t=toMin($('tTo').value);
+  if (t<=f) return { error:'เวลาสิ้นสุดต้องหลังเวลาเริ่ม' };
+  const mins = t-f-Math.max(0, Math.min(t,780)-Math.max(f,720));
+  const days = Math.min(1, Math.round(mins/60/S.data.rules.hoursPerDay*100)/100);
+  if (days<=0) return { error:'ช่วงเวลาที่เลือกอยู่ในเวลาพักเที่ยง' };
+  return { days, hours: mins/60, sun, hols };
+}
+
+function refresh(){
+  $('typeChips').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.t===S.type));
+  $('typeOther').classList.toggle('hidden', S.type!=='อื่นๆ');
+  $('seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.p===S.period));
+  const full = S.period==='full';
+  $('boxEnd').classList.toggle('hidden', !full);
+  $('boxTime').classList.toggle('hidden', S.period!=='hours');
+  $('lblStart').innerHTML = (full?'ตั้งแต่วันที่':'วันที่ลา') + ' <span class="req">*</span>';
+  $('beStart').textContent = beLong($('dStart').value);
+  $('beEnd').textContent = beLong($('dEnd').value);
+
+  const c = calc(), d = S.data, me = d.me, u = d.usage;
+  let h = '';
+  if (c.error) h = `<div class="note bad" style="margin:0">${esc(c.error)}</div>`;
+  else {
+    const extra = [];
+    if (c.sun) extra.push('ไม่นับวันอาทิตย์ ' + c.sun + ' วัน');
+    if (c.hols.length) extra.push('ไม่นับวันหยุดบริษัท: ' + c.hols.join(', '));
+    h = `<div class="big">รวม ${num(c.days)} วัน${c.hours?` <span style="font-weight:500;font-size:14px">(${num(c.hours)} ชม.)</span>`:''}</div>` + (extra.length?`<div style="color:var(--muted)">${esc(extra.join(' · '))}</div>`:'');
+    if ($('dStart').value < d.today) h += `<div class="note warn">แจ้งย้อนหลัง — ส่งได้ ระบบจะบันทึกว่าแจ้งย้อนหลัง</div>`;
+    if (u && S.type){
+      const ent = S.type==='ลาพักร้อน'?me.vac : S.type==='ลากิจ'?d.rules.personal : S.type==='ลาป่วย'?d.rules.sick : 0;
+      if (ent){
+        const used = u[S.type].days, after = Math.round((used + c.days)*100)/100;
+        if (after > ent) h += `<div class="note bad">${esc(S.type)}รอบปีนี้จะรวมเป็น ${num(after)} วัน เกินสิทธิ์ ${ent} วัน (ยังส่งได้ แอดมินจะเห็นว่าเกินสิทธิ์)</div>`;
+        else h += `<div class="note ok">หลังลาครั้งนี้ ${esc(S.type)}คงเหลือ ${num(ent-after)} วัน จาก ${ent} วัน</div>`;
+      }
+    }
+  }
+  $('sum').innerHTML = h;
+}
+
+function alertBox(id, msg){ $(id).innerHTML = '<div class="note bad">'+esc(msg)+'</div>'; }
+
+async function doSubmit(){
+  $('formMsg').innerHTML = '';
+  if (!S.type) return alertBox('formMsg','กรุณาเลือกประเภทการลา'), $('typeChips').scrollIntoView({behavior:'smooth',block:'center'});
+  if (S.type==='อื่นๆ' && !$('typeOther').value.trim()) return alertBox('formMsg','กรุณาระบุประเภทการลา');
+  const c = calc(); if (c.error) return alertBox('formMsg', c.error);
+  if (!$('reason').value.trim()) return alertBox('formMsg','กรุณากรอกสาเหตุการลา'), $('reason').focus();
+  const b = $('btnSubmit'); b.disabled = true; b.textContent = 'กำลังส่ง…';
+  try{
+    const res = await api({ action:'submit', uid:S.uid, empId:S.data.me.id, type:S.type, typeOther:$('typeOther').value.trim(),
+      reason:$('reason').value.trim(), start:$('dStart').value, end:$('dEnd').value, periodType:S.period,
+      timeFrom:$('tFrom').value, timeTo:$('tTo').value, phone:$('phone').value.trim() });
+    const L = res.leave;
+    if (res.usage) S.data.usage = res.usage;
+    S.data.me.phone = L.phone;
+    S.data.myLeaves = [ {no:L.no,type:L.type,typeOther:L.typeOther,start:L.start,end:L.end,period:L.period,days:L.days,reason:L.reason}, ...(S.data.myLeaves||[]) ]
+      .filter(x => S.data.cycle && x.start>=S.data.cycle.start && x.start<=S.data.cycle.end).sort((a,b)=>b.start.localeCompare(a.start));
+    renderBalance(); renderHist();
+    $('doneNote').textContent = /^สำเร็จ/.test(res.notify.line) ? 'แจ้งแอดมินทาง LINE แล้ว' : 'บันทึกในระบบแล้ว';
+    $('doneKv').innerHTML = [
+      ['เลขที่', L.no], ['ชื่อ', L.name + (L.nick?' ('+L.nick+')':'')], ['ประเภท', L.type==='อื่นๆ'?'อื่นๆ ('+L.typeOther+')':L.type],
+      ['วันที่', be(L.start) + (L.end!==L.start?' – '+be(L.end):'')], ['ช่วงเวลา', L.period], ['จำนวน', num(L.days)+' วัน'], ['สาเหตุ', L.reason]
+    ].map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
+    show('vDone');
+  }catch(e){ alertBox('formMsg', e.message); }
+  finally{ b.disabled = false; b.textContent = 'ส่งใบลา'; }
+}
+
+function closeApp(){ try{ if (LIFF_ID && liff.isInClient()) return liff.closeWindow(); }catch(e){} newLeave(); }
+
+start();
+</script>
+</body>
+</html>

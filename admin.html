@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จัดการใบลา V-pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbyHzI072AVOtZCTfLLBZ5mg5_sEs3oaPGUWcUNI3EbbNr3NZGP8kyBkHwH9Govup2k/exec';   // ลงท้ายด้วย /exec (ตัวเดียวกับ index.html)
+</script>
+<style>
+:root{
+  --brand:#d24a0e; --brand-d:#a83a0a; --brand-l:#fdece4; --green:#5aa62b;
+  --ink:#1f1a17; --muted:#6f6660; --line:#ebe3de; --bg:#f7f3f0; --card:#fff;
+  --ok:#1f8a4c; --ok-l:#e5f5ec; --warn:#b26a00; --warn-l:#fff4e0; --bad:#c62828; --bad-l:#fdeaea;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Thai',system-ui,sans-serif;font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--brand);color:#fff}
+header .in{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+.brand .logo{background:#fff;color:var(--brand);border-radius:9px;padding:1px 8px;font-size:15px}
+.brand .logo b{color:var(--green)}
+nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav button{background:none;border:0;color:#fff;opacity:.85;padding:7px 12px;border-radius:9px;cursor:pointer}
+nav button.on{background:rgba(255,255,255,.2);opacity:1;font-weight:600}
+main{max-width:1280px;margin:0 auto;padding:16px}
+.card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(80,40,20,.05);margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.stat .n{font-size:24px;font-weight:700;line-height:1.2}
+.stat .l{font-size:13px;color:var(--muted)}
+.stat.alert .n{color:var(--brand)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters > *{flex:0 1 auto}
+input,select,textarea{border:1.5px solid var(--line);border-radius:10px;padding:7px 10px;background:#fff;outline:none;min-height:38px}
+input:focus,select:focus,textarea:focus{border-color:var(--brand)}
+.btn{border:0;border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;background:var(--brand);color:#fff;white-space:nowrap}
+.btn.sec{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.danger{background:#fff;color:var(--bad);border:1.5px solid #f2c4c4}
+.btn.sm{padding:4px 10px;font-size:13px;font-weight:500}
+.btn:disabled{opacity:.5}
+.tw{overflow-x:auto;margin:0 -16px;padding:0 16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:8px;border-bottom:1.5px solid var(--line);white-space:nowrap;background:#fff;position:sticky;top:0}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:#fcfaf8}
+td.num,th.num{text-align:right;white-space:nowrap}
+td.nw{white-space:nowrap}
+.reason{max-width:260px;color:#3b3430}
+.tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:500;white-space:nowrap}
+.t-ลาป่วย{background:#e8f1fd;color:#1b5fb0}
+.t-ลากิจ{background:#f2ebfd;color:#6a3fb0}
+.t-ลาพักร้อน{background:var(--ok-l);color:var(--ok)}
+.t-ลาคลอด{background:#fdeaf4;color:#a8326e}
+.t-อุบัติเหตุจากการทำงาน\(กท\.\){background:var(--bad-l);color:var(--bad)}
+.t-อื่นๆ{background:#eee;color:#555}
+.tag.retro{background:var(--warn-l);color:var(--warn)}
+.tag.src{background:#f1efed;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+.dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.none{background:#ccc}
+.sub{color:var(--muted);font-size:12.5px}
+.over{color:var(--bad);font-weight:700}
+.chk{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.login{max-width:380px;margin:60px auto}
+.login h1{font-size:20px;margin:0 0 4px}
+.msg{border-radius:10px;padding:8px 12px;margin-top:10px;font-size:14px}
+.msg.bad{background:var(--bad-l);color:var(--bad)} .msg.ok{background:var(--ok-l);color:var(--ok)} .msg.warn{background:var(--warn-l);color:var(--warn)}
+dialog{border:0;border-radius:16px;padding:0;width:min(640px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(30,20,10,.45)}
+.dlg-h{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.dlg-b{padding:16px 18px;max-height:70vh;overflow:auto}
+.dlg-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
+.grid label.full{grid-column:1/-1}
+.grid input,.grid select,.grid textarea{color:var(--ink);font-size:15px}
+.x{background:none;border:0;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2b2522;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;opacity:0;transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1}
+.h2{font-size:16px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.h2 .sp{margin-left:auto;display:flex;gap:8px}
+code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:13px;word-break:break-all}
+@media (max-width:640px){ .grid{grid-template-columns:1fr} nav{margin-left:0;width:100%} }
+</style>
+</head>
+<body>
+<header><div class="in">
+  <div class="brand"><span class="logo"><b>V</b>-pack</span> จัดการใบลา</div>
+  <nav id="nav" class="hidden">
+    <button data-tab="leaves" class="on">ใบลา</button>
+    <button data-tab="summary">สรุปรายคน</button>
+    <button data-tab="emps">พนักงาน</button>
+    <button data-tab="settings">แอดมิน/ตั้งค่า</button>
+    <button onclick="logout()">ออกจากระบบ</button>
+  </nav>
+</div></header>
+
+<main>
+  <!-- เข้าสู่ระบบ -->
+  <section id="vLogin" class="card login">
+    <h1>เข้าสู่ระบบ</h1>
+    <div class="muted" style="font-size:14px;margin-bottom:12px">ใช้รหัสผ่านในชีต "ตั้งค่า" (ADMIN_PASSWORD)</div>
+    <input type="password" id="pw" placeholder="รหัสผ่าน" style="width:100%" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn" style="width:100%;margin-top:10px;padding:10px" onclick="login()">เข้าสู่ระบบ</button>
+    <div id="loginMsg"></div>
+  </section>
+
+  <!-- ใบลา -->
+  <section id="tab-leaves" class="hidden">
+    <div class="stats" id="stats"></div>
+    <div class="card">
+      <div class="filters">
+        <select id="fCycle"></select>
+        <select id="fEmp"><option value="">พนักงานทุกคน</option></select>
+        <select id="fType"><option value="">ทุกประเภท</option></select>
+        <select id="fHip"><option value="">HIP: ทั้งหมด</option><option value="no">ยังไม่ลง HIP</option><option value="yes">ลง HIP แล้ว</option></select>
+        <input id="fQ" placeholder="🔍 ค้นหา ชื่อ/สาเหตุ/เลขที่" style="min-width:200px;flex:1 1 200px">
+        <button class="btn sec" onclick="exportCSV()">ส่งออก CSV</button>
+        <button class="btn sec" onclick="reload()">↻ รีเฟรช</button>
+        <button class="btn" onclick="openLeave()">+ เพิ่มใบลา</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tw"><table>
+        <thead><tr><th>เลขที่</th><th>แจ้งเมื่อ</th><th>ชื่อ</th><th>ประเภท</th><th>วันที่ลา</th><th class="num">วัน</th><th>สาเหตุ</th><th>แจ้งเตือน</th><th title="มีใบรับรองแพทย์">ใบแพทย์</th><th title="บันทึกลงโปรแกรม HIP Time แล้ว">ลง HIP</th><th></th></tr></thead>
+        <tbody id="tbLeaves"></tbody>
+      </table></div>
+      <div id="leavesFoot" class="sub" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- สรุป -->
+  <section id="tab-summary" class="hidden">
+    <div class="card">
+      <div class="h2">สรุปการลารายคน <span class="sp"><select id="sCycle"></select></span></div>
+      <div class="tw"><table>
+        <thead><tr><th>พนักงาน</th><th>แผนก</th><th class="num">ลาพักร้อน<br><span class="sub">ใช้/สิทธิ์ (เหลือ)</span></th><th class="num">ลากิจ<br><span class="sub">ใช้/สิทธิ์ (เหลือ)</span></th><th class="num">ลาป่วย<br><span class="sub">วัน (ครั้ง)</span></th><th class="num">ลาคลอด</th><th class="num">กท.</th><th class="num">อื่นๆ</th><th class="num">รวม (วัน)</th></tr></thead>
+        <tbody id="tbSum"></tbody>
+      </table></div>
+      <div class="sub" style="margin-top:10px">คลิกชื่อเพื่อดูใบลาของคนนั้น · นับตามวันที่เริ่มลา · สีแดง = เกินสิทธิ์</div>
+    </div>
+  </section>
+
+  <!-- พนักงาน -->
+  <section id="tab-emps" class="hidden">
+    <div class="card">
+      <div class="h2">ทะเบียนพนักงาน <span class="sp"><button class="btn" onclick="openEmp()">+ เพิ่มพนักงาน</button></span></div>
+      <div class="tw"><table>
+        <thead><tr><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ชื่อเล่น</th><th>แผนก</th><th class="num">สิทธิ์พักร้อน</th><th>เบอร์โทร</th><th>สถานะ</th><th>LINE</th><th></th></tr></thead>
+        <tbody id="tbEmps"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ตั้งค่า -->
+  <section id="tab-settings" class="hidden">
+    <div class="card">
+      <div class="h2">แอดมินรับแจ้งเตือนทาง LINE</div>
+      <div id="tokenMsg"></div>
+      <div class="tw"><table>
+        <thead><tr><th>ชื่อแอดมิน</th><th>ชื่อ LINE</th><th>ลงทะเบียนเมื่อ</th><th>รับแจ้งเตือน</th><th></th></tr></thead>
+        <tbody id="tbAdmins"></tbody>
+      </table></div>
+      <div class="sub" style="margin-top:12px">วิธีเพิ่มแอดมิน: ให้แอดมินเพิ่ม LINE OA เป็นเพื่อนก่อน แล้วเปิดลิงก์นี้ในแอป LINE → กรอกรหัสผ่าน<br><code id="admLink"></code> <button class="btn sec sm" onclick="copyText($('admLink').textContent)">คัดลอก</button></div>
+    </div>
+    <div class="card">
+      <div class="h2">อีเมลรับแจ้งเตือน</div>
+      <div class="filters">
+        <input id="setEmails" style="flex:1 1 320px" placeholder="อีเมล ถ้ามีหลายอีเมลคั่นด้วย ,">
+        <button class="btn" onclick="saveEmails()">บันทึก</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="h2">วันหยุดบริษัท และรอบปี</div>
+      <div class="sub" style="margin-bottom:8px">แก้ไขได้ในชีต "วันหยุด" และ "รอบปี" ของ Google Sheets (เพิ่มปีใหม่ทุกต้นปี)</div>
+      <div id="cycList"></div>
+      <div id="holList" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+  </section>
+</main>
+
+<!-- แก้ไข/เพิ่มใบลา -->
+<dialog id="dlgLeave">
+  <div class="dlg-h"><span id="dlTitle">ใบลา</span><button class="x" onclick="$('dlgLeave').close()">×</button></div>
+  <div class="dlg-b">
+    <div class="grid">
+      <label class="full">พนักงาน<select id="lEmp"></select></label>
+      <label>ประเภทการลา<select id="lType"></select></label>
+      <label id="lOtherBox">ระบุ (อื่นๆ)<input id="lOther"></label>
+      <label>ตั้งแต่วันที่<input type="date" id="lStart"><span class="sub" id="lStartBE"></span></label>
+      <label>ถึงวันที่<input type="date" id="lEnd"><span class="sub" id="lEndBE"></span></label>
+      <label>ช่วงเวลา<input id="lPeriod" list="periodList" placeholder="เต็มวัน"></label>
+      <label>จำนวนวัน <span class="sub" id="lAuto"></span><input type="number" id="lDays" step="0.25" min="0"></label>
+      <label class="full">สาเหตุ<textarea id="lReason" rows="2"></textarea></label>
+      <label>เบอร์ติดต่อ<input id="lPhone"></label>
+      <label style="flex-direction:row;align-items:center;gap:8px;margin-top:20px"><input type="checkbox" id="lHip" class="chk"> บันทึกลง HIP แล้ว</label>
+      <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="lMed" class="chk"> มีใบรับรองแพทย์</label>
+      <label class="full">หมายเหตุ (แอดมิน)<input id="lNote"></label>
+      <label class="full" id="lNotifyBox" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="lNotify" class="chk"> ส่งแจ้งเตือน LINE/อีเมลด้วย</label>
+    </div>
+    <div id="lInfo" class="sub" style="margin-top:12px"></div>
+    <div id="lMsg"></div>
+  </div>
+  <div class="dlg-f">
+    <button class="btn danger" id="lDel" onclick="delLeave()">ลบ</button>
+    <button class="btn sec" id="lResend" onclick="resend()">ส่งแจ้งเตือนซ้ำ</button>
+    <span style="flex:1"></span>
+    <button class="btn sec" onclick="$('dlgLeave').close()">ยกเลิก</button>
+    <button class="btn" id="lSave" onclick="saveLeave()">บันทึก</button>
+  </div>
+</dialog>
+<datalist id="periodList"><option>เต็มวัน</option><option>ครึ่งวันเช้า (08:00-12:00)</option><option>ครึ่งวันบ่าย (13:00-17:00)</option></datalist>
+
+<!-- แก้ไข/เพิ่มพนักงาน -->
+<dialog id="dlgEmp">
+  <div class="dlg-h"><span id="deTitle">พนักงาน</span><button class="x" onclick="$('dlgEmp').close()">×</button></div>
+  <div class="dlg-b">
+    <div class="grid">
+      <label>คำนำหน้า<select id="eTitle"><option>นาย</option><option>นาง</option><option>นางสาว</option></select></label>
+      <label>ชื่อเล่น<input id="eNick"></label>
+      <label class="full">ชื่อ-นามสกุล<input id="eName"></label>
+      <label class="full">ชื่ออังกฤษ<input id="eNameEn"></label>
+      <label>แผนก<input id="eDept" list="deptList"></label>
+      <label>สิทธิ์ลาพักร้อน (วัน/ปี)<input type="number" id="eVac" min="0" step="1"></label>
+      <label>เบอร์โทร<input id="ePhone"></label>
+      <label>วันเริ่มงาน (วว/ดด/ปปปป)<input id="eStart" placeholder="เช่น 01/06/2569"></label>
+      <label>สถานะ<select id="eStatus"><option>ทำงาน</option><option>ลาออก</option></select></label>
+    </div>
+    <div id="eMsg"></div>
+  </div>
+  <div class="dlg-f"><button class="btn sec" onclick="$('dlgEmp').close()">ยกเลิก</button><button class="btn" onclick="saveEmp()">บันทึก</button></div>
+</dialog>
+<datalist id="deptList"></datalist>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let KEY = '', D = null, editNo = '', editEmp = '';
+const SHORT = {'อุบัติเหตุจากการทำงาน(กท.)':'กท.'};
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function be(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+(+y+543); }
+function num(n){ return String(Math.round((+n||0)*100)/100); }
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ v==null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(e){} }
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2600); }
+function msg(id,text,kind){ $(id).innerHTML = text ? `<div class="msg ${kind||'bad'}">${esc(text)}</div>` : ''; }
+
+async function api(body){
+  if (typeof API_URL === 'undefined') throw new Error('บรรทัดตั้งค่า API_URL ด้านบนของไฟล์ admin.html ผิดรูปแบบ (เช่น เครื่องหมาย \' หาย)');
+  if (!/^https:\/\/script\.google/.test(API_URL)) throw new Error('ยังไม่ได้ใส่ API_URL ในไฟล์ admin.html');
+  const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(Object.assign({key:KEY}, body)) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j;
+}
+
+/* ---------- เข้าสู่ระบบ ---------- */
+async function login(){
+  KEY = $('pw').value; msg('loginMsg','');
+  try{ await loadAll(); lsSet('vpack_leave_key', KEY); }
+  catch(e){ msg('loginMsg', e.message); }
+}
+function logout(){ lsSet('vpack_leave_key', null); location.reload(); }
+async function loadAll(){
+  D = await api({ action:'adminData' });
+  $('vLogin').classList.add('hidden'); $('nav').classList.remove('hidden');
+  initFilters(); renderAll();
+  showTab(lsGet('vpack_leave_tab') || 'leaves');
+}
+async function reload(){ try{ D = await api({ action:'adminData' }); renderAll(); toast('อัปเดตข้อมูลแล้ว'); }catch(e){ toast(e.message); } }
+
+document.querySelectorAll('nav button[data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+function showTab(t){
+  document.querySelectorAll('nav button[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab===t));
+  ['leaves','summary','emps','settings'].forEach(x => $('tab-'+x).classList.toggle('hidden', x!==t));
+  lsSet('vpack_leave_tab', t);
+}
+
+/* ---------- helpers ---------- */
+function cycleOf(iso){ return D.cycles.find(c => c.start<=iso && iso<=c.end) || null; }
+function curCycle(){ return cycleOf(D.today) || D.cycles[D.cycles.length-1]; }
+function empById(id){ return D.employees.find(e => e.id===id); }
+function typeLabel(l){ return l.type==='อื่นๆ' && l.typeOther ? 'อื่นๆ: '+l.typeOther : (SHORT[l.type]||l.type); }
+
+function initFilters(){
+  const cyc = D.cycles.slice().reverse();
+  const opts = cyc.map(c => `<option value="${c.year}">รอบปี ${c.year} (${be(c.start)}–${be(c.end)})</option>`).join('');
+  $('fCycle').innerHTML = opts + '<option value="">ทุกรอบปี</option>';
+  $('sCycle').innerHTML = opts;
+  const cc = curCycle(); if (cc){ $('fCycle').value = cc.year; $('sCycle').value = cc.year; }
+  $('fType').innerHTML = '<option value="">ทุกประเภท</option>' + D.types.map(t=>`<option>${esc(t)}</option>`).join('');
+  ['fCycle','fEmp','fType','fHip'].forEach(id => $(id).onchange = renderLeaves);
+  $('fQ').oninput = renderLeaves;
+  $('sCycle').onchange = renderSummary;
+}
+
+function renderAll(){
+  const cur = $('fEmp').value;
+  $('fEmp').innerHTML = '<option value="">พนักงานทุกคน</option>' + D.employees.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.nick)})</option>`).join('');
+  $('fEmp').value = cur;
+  $('deptList').innerHTML = [...new Set(D.employees.map(e=>e.dept))].map(d=>`<option>${esc(d)}</option>`).join('');
+  renderLeaves(); renderSummary(); renderEmps(); renderSettings();
+}
+
+/* ---------- ใบลา ---------- */
+function filtered(){
+  const cy = D.cycles.find(c => c.year===$('fCycle').value);
+  const emp = $('fEmp').value, type = $('fType').value, hip = $('fHip').value, q = $('fQ').value.trim().toLowerCase();
+  return D.leaves.filter(l =>
+    (!cy || (l.start>=cy.start && l.start<=cy.end)) && (!emp || l.empId===emp) && (!type || l.type===type) &&
+    (!hip || (hip==='yes') === !!l.hip) &&
+    (!q || [l.no,l.name,l.nick,l.reason,l.dept,l.typeOther,l.note].join(' ').toLowerCase().includes(q))
+  ).sort((a,b) => (b.start.localeCompare(a.start)) || b.no.localeCompare(a.no));
+}
+
+function notifyCell(l){
+  const s = l.lineStatus||'', m = l.mailStatus||'';
+  if (/นำเข้า/.test(s)) return '<span class="tag src">MS Forms</span>';
+  const dot = v => /^สำเร็จ/.test(v) ? 'ok' : v ? 'bad' : 'none';
+  return `<span title="LINE: ${esc(s||'-')}"><span class="dot ${dot(s)}"></span>LINE</span><br><span title="อีเมล: ${esc(m||'-')}"><span class="dot ${dot(m)}"></span>อีเมล</span>`;
+}
+
+function renderLeaves(){
+  const rows = filtered();
+  $('tbLeaves').innerHTML = rows.map(l => `<tr>
+    <td class="nw">${esc(l.no)}${l.source==='แอดมินบันทึก'?'<br><span class="tag src">แอดมินบันทึก</span>':''}</td>
+    <td class="nw sub">${esc(l.ts)}</td>
+    <td><b>${esc(l.name)}</b>${l.nick?' ('+esc(l.nick)+')':''}<br><span class="sub">${esc(l.dept)}</span>${l.empId?'':'<br><span class="tag retro">ไม่พบในทะเบียน</span>'}</td>
+    <td><span class="tag t-${esc(l.type)}">${esc(typeLabel(l))}</span></td>
+    <td class="nw">${be(l.start)}${l.end!==l.start?' –<br>'+be(l.end):''}<br><span class="sub">${esc(l.period)}</span>${l.retro?' <span class="tag retro">ย้อนหลัง</span>':''}</td>
+    <td class="num"><b>${num(l.days)}</b></td>
+    <td class="reason">${esc(l.reason)}${l.note?`<br><span class="sub">📝 ${esc(l.note)}</span>`:''}</td>
+    <td class="nw sub">${notifyCell(l)}</td>
+    <td style="text-align:center">${l.type==='ลาป่วย'||l.medCert?`<input type="checkbox" class="chk" ${l.medCert?'checked':''} onchange="setFlag('${esc(l.no)}',this,'medCert')">`:''}</td>
+    <td style="text-align:center"><input type="checkbox" class="chk" ${l.hip?'checked':''} onchange="setFlag('${esc(l.no)}',this,'hip')"></td>
+    <td><button class="btn sec sm" onclick="openLeave('${esc(l.no)}')">แก้ไข</button></td>
+  </tr>`).join('') || '<tr><td colspan="11" class="muted" style="text-align:center;padding:24px">ไม่มีรายการ</td></tr>';
+  const tot = rows.reduce((s,l)=>s+(+l.days||0),0);
+  $('leavesFoot').textContent = `แสดง ${rows.length} รายการ · รวม ${num(tot)} วัน`;
+
+  const cc = curCycle();
+  const inCyc = D.leaves.filter(l => cc && l.start>=cc.start && l.start<=cc.end);
+  const ym = D.today.slice(0,7);
+  const thisMonth = D.leaves.filter(l => l.start.slice(0,7)===ym);
+  const noHip = D.leaves.filter(l => !l.hip).length;
+  const failed = D.leaves.filter(l => l.lineStatus && /^ล้มเหลว|^ยังไม่/.test(l.lineStatus)).length;
+  $('stats').innerHTML = `
+    <div class="stat ${noHip?'alert':''}" style="cursor:pointer" onclick="$('fHip').value='no';$('fCycle').value='';renderLeaves()"><div class="n">${noHip}</div><div class="l">ยังไม่ลง HIP (คลิกเพื่อดู)</div></div>
+    <div class="stat"><div class="n">${thisMonth.length}</div><div class="l">ใบลาเดือนนี้ · ${num(thisMonth.reduce((s,l)=>s+l.days,0))} วัน</div></div>
+    <div class="stat"><div class="n">${inCyc.length}</div><div class="l">ใบลารอบปี ${cc?cc.year:''} · ${num(inCyc.reduce((s,l)=>s+l.days,0))} วัน</div></div>
+    <div class="stat ${failed?'alert':''}"><div class="n">${failed}</div><div class="l">แจ้งเตือน LINE ไม่สำเร็จ</div></div>`;
+}
+
+async function setFlag(no, el, field){
+  const v = el.checked; el.disabled = true;
+  try{ await api({ action:'setHip', no, value:v, field }); const l = D.leaves.find(x=>x.no===no); if(l) l[field] = v; renderLeaves();
+    toast(field==='hip' ? (v?'ติ๊กลง HIP แล้ว':'ยกเลิกติ๊ก HIP') : (v?'ติ๊กมีใบรับรองแพทย์':'ยกเลิกติ๊กใบรับรองแพทย์')); }
+  catch(e){ el.checked = !v; toast(e.message); }
+  finally{ el.disabled = false; }
+}
+
+/* ---------- dialog ใบลา ---------- */
+const holMap = () => { const m={}; D.holidays.forEach(h=>m[h.date]=1); return m; };
+function workDays(s,e){ if(!s||!e||e<s) return 0; const hm=holMap(); let n=0; const d=new Date(s+'T00:00:00Z'), end=new Date(e+'T00:00:00Z'); while(d<=end){ const iso=d.toISOString().slice(0,10); if(d.getUTCDay()!==0 && !hm[iso]) n++; d.setUTCDate(d.getUTCDate()+1);} return n; }
+function autoDays(){
+  const s=$('lStart').value, e=$('lEnd').value, p=$('lPeriod').value;
+  $('lStartBE').textContent = be(s); $('lEndBE').textContent = be(e);
+  const w = workDays(s,e);
+  let a = /^ครึ่งวัน/.test(p) ? 0.5 : w;
+  const m = p.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  if (m && !/^ครึ่งวัน/.test(p)){ const f=+m[1]*60+ +m[2], t=+m[3]*60+ +m[4]; const mins=t-f-Math.max(0,Math.min(t,780)-Math.max(f,720)); if(mins>0) a=Math.min(1,Math.round(mins/60/D.rules.hoursPerDay*100)/100); }
+  $('lAuto').textContent = '(คำนวณได้ ' + num(a) + ' วัน)';
+  return a;
+}
+['lStart','lEnd','lPeriod'].forEach(id => $(id).addEventListener('input', () => {
+  if (id==='lStart' && (!$('lEnd').value || $('lEnd').value < $('lStart').value)) $('lEnd').value = $('lStart').value;
+  $('lDays').value = autoDays();
+}));
+$('lType').onchange = () => $('lOtherBox').classList.toggle('hidden', $('lType').value!=='อื่นๆ');
+$('lEmp').onchange = () => { const e = empById($('lEmp').value); if (e && !$('lPhone').value) $('lPhone').value = e.phone||''; };
+
+function openLeave(no){
+  editNo = no || '';
+  const l = no ? D.leaves.find(x=>x.no===no) : { empId:'', type:'', start:D.today, end:D.today, period:'เต็มวัน', days:1, reason:'', phone:'', note:'', hip:false };
+  $('dlTitle').textContent = no ? 'แก้ไขใบลา ' + no : 'เพิ่มใบลา (บันทึกแทนพนักงาน)';
+  $('lEmp').innerHTML = '<option value="">— เลือกพนักงาน —</option>' + D.employees.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.nick)}) · ${esc(e.dept)}${e.status==='ลาออก'?' [ลาออก]':''}</option>`).join('');
+  $('lType').innerHTML = '<option value="">— เลือก —</option>' + D.types.map(t=>`<option>${esc(t)}</option>`).join('');
+  $('lEmp').value = l.empId; $('lType').value = l.type; $('lOther').value = l.typeOther||'';
+  $('lStart').value = l.start; $('lEnd').value = l.end; $('lPeriod').value = l.period; $('lDays').value = l.days;
+  $('lReason').value = l.reason; $('lPhone').value = l.phone; $('lNote').value = l.note||''; $('lHip').checked = !!l.hip; $('lMed').checked = !!l.medCert;
+  $('lNotify').checked = false;
+  $('lOtherBox').classList.toggle('hidden', l.type!=='อื่นๆ');
+  $('lNotifyBox').classList.toggle('hidden', !!no);
+  $('lDel').classList.toggle('hidden', !no); $('lResend').classList.toggle('hidden', !no);
+  $('lInfo').innerHTML = no ? `แจ้งเมื่อ ${esc(l.ts)} · ที่มา: ${esc(l.source)}${l.empId?'':' · <b>ชื่อนี้ไม่พบในทะเบียน ('+esc(l.name)+') — เลือกพนักงานให้ถูกคนแล้วบันทึก</b>'}<br>LINE: ${esc(l.lineStatus||'-')} · อีเมล: ${esc(l.mailStatus||'-')}` : '';
+  msg('lMsg',''); autoDays();
+  $('dlgLeave').showModal();
+}
+
+async function saveLeave(){
+  const leave = { no:editNo, empId:$('lEmp').value, type:$('lType').value, typeOther:$('lOther').value.trim(), start:$('lStart').value, end:$('lEnd').value,
+    period:$('lPeriod').value.trim()||'เต็มวัน', days:$('lDays').value, reason:$('lReason').value.trim(), phone:$('lPhone').value.trim(), note:$('lNote').value.trim(), hip:$('lHip').checked, medCert:$('lMed').checked };
+  if (!leave.empId) return msg('lMsg','กรุณาเลือกพนักงาน');
+  if (!leave.type) return msg('lMsg','กรุณาเลือกประเภทการลา');
+  const b = $('lSave'); b.disabled = true;
+  try{
+    const r = await api({ action:'saveLeave', leave, notify:$('lNotify').checked });
+    const i = D.leaves.findIndex(x=>x.no===r.leave.no);
+    if (i>=0) D.leaves[i] = r.leave; else D.leaves.push(r.leave);
+    $('dlgLeave').close(); renderLeaves(); renderSummary(); toast('บันทึกใบลา ' + r.leave.no + ' แล้ว');
+  }catch(e){ msg('lMsg', e.message); }
+  finally{ b.disabled = false; }
+}
+
+async function delLeave(){
+  if (!confirm('ลบใบลา ' + editNo + ' ? ลบแล้วกู้คืนไม่ได้')) return;
+  try{ await api({ action:'deleteLeave', no:editNo }); D.leaves = D.leaves.filter(x=>x.no!==editNo); $('dlgLeave').close(); renderLeaves(); renderSummary(); toast('ลบแล้ว'); }
+  catch(e){ msg('lMsg', e.message); }
+}
+
+async function resend(){
+  const b = $('lResend'); b.disabled = true; msg('lMsg','กำลังส่ง…','warn');
+  try{
+    const r = await api({ action:'resend', no:editNo });
+    const l = D.leaves.find(x=>x.no===editNo); if(l){ l.lineStatus=r.notify.line; l.mailStatus=r.notify.mail; }
+    msg('lMsg', 'LINE: ' + r.notify.line + ' · อีเมล: ' + r.notify.mail, /^สำเร็จ/.test(r.notify.line)?'ok':'warn'); renderLeaves();
+  }catch(e){ msg('lMsg', e.message); }
+  finally{ b.disabled = false; }
+}
+
+/* ---------- สรุป ---------- */
+function renderSummary(){
+  const cy = D.cycles.find(c => c.year===$('sCycle').value); if (!cy){ $('tbSum').innerHTML=''; return; }
+  const rows = D.employees.filter(e => e.status!=='ลาออก' || D.leaves.some(l=>l.empId===e.id && l.start>=cy.start && l.start<=cy.end)).map(e => {
+    const u = {}; D.types.forEach(t => u[t]={d:0,c:0});
+    D.leaves.forEach(l => { if (l.empId===e.id && l.start>=cy.start && l.start<=cy.end && u[l.type]){ u[l.type].d += +l.days||0; u[l.type].c++; } });
+    const tot = Object.values(u).reduce((s,x)=>s+x.d,0);
+    const quota = (used, ent) => `<span class="${used>ent?'over':''}">${num(used)}/${ent}</span> <span class="sub">(${num(ent-used)})</span>`;
+    const dc = x => x.c ? `${num(x.d)} <span class="sub">(${x.c})</span>` : '<span class="sub">-</span>';
+    return `<tr>
+      <td><a href="#" onclick="jumpEmp('${e.id}');return false" style="color:var(--brand-d);font-weight:600">${esc(e.name)}</a> (${esc(e.nick)})</td>
+      <td class="sub">${esc(e.dept)}</td>
+      <td class="num">${quota(u['ลาพักร้อน'].d, e.vac)}</td>
+      <td class="num">${quota(u['ลากิจ'].d, D.rules.personal)}</td>
+      <td class="num"><span class="${u['ลาป่วย'].d>D.rules.sick?'over':''}">${num(u['ลาป่วย'].d)}</span> <span class="sub">(${u['ลาป่วย'].c} ครั้ง)</span></td>
+      <td class="num">${dc(u['ลาคลอด'])}</td><td class="num">${dc(u['อุบัติเหตุจากการทำงาน(กท.)'])}</td><td class="num">${dc(u['อื่นๆ'])}</td>
+      <td class="num"><b>${num(tot)}</b></td></tr>`;
+  });
+  const orphan = D.leaves.filter(l => !l.empId && l.start>=cy.start && l.start<=cy.end).length;
+  $('tbSum').innerHTML = rows.join('') + (orphan ? `<tr><td colspan="9" class="sub">⚠️ มีใบลา ${orphan} รายการที่ไม่ได้จับคู่กับพนักงาน (ดูแท็บใบลา → แก้ไข → เลือกพนักงาน)</td></tr>` : '');
+}
+function jumpEmp(id){ $('fEmp').value = id; $('fCycle').value = $('sCycle').value; $('fType').value=''; $('fHip').value=''; $('fQ').value=''; renderLeaves(); showTab('leaves'); }
+
+/* ---------- พนักงาน ---------- */
+function renderEmps(){
+  $('tbEmps').innerHTML = D.employees.map(e => `<tr style="${e.status==='ลาออก'?'opacity:.5':''}">
+    <td class="sub">${esc(e.id)}</td><td>${esc(e.title)}${esc(e.name)}<br><span class="sub">${esc(e.nameEn)}</span></td><td>${esc(e.nick)}</td><td class="sub">${esc(e.dept)}</td>
+    <td class="num">${e.vac}</td><td class="nw">${esc(e.phone)||'<span class="sub">-</span>'}</td><td>${esc(e.status)}</td>
+    <td class="nw">${e.linked?`✅ <span class="sub">${esc(e.lineName)}</span> <button class="btn sec sm" onclick="unlink('${e.id}')">ยกเลิกผูก</button>`:'<span class="sub">ยังไม่ผูก</span>'}</td>
+    <td><button class="btn sec sm" onclick="openEmp('${e.id}')">แก้ไข</button></td></tr>`).join('');
+}
+function openEmp(id){
+  editEmp = id || '';
+  const e = id ? empById(id) : { title:'นาย', name:'', nameEn:'', nick:'', dept:'', vac:6, phone:'', startDate:'', status:'ทำงาน' };
+  $('deTitle').textContent = id ? 'แก้ไขพนักงาน ' + id : 'เพิ่มพนักงานใหม่';
+  $('eTitle').value=e.title||'นาย'; $('eName').value=e.name; $('eNameEn').value=e.nameEn; $('eNick').value=e.nick; $('eDept').value=e.dept;
+  $('eVac').value=e.vac; $('ePhone').value=e.phone; $('eStart').value=e.startDate; $('eStatus').value=e.status||'ทำงาน';
+  msg('eMsg',''); $('dlgEmp').showModal();
+}
+async function saveEmp(){
+  const employee = { id:editEmp, title:$('eTitle').value, name:$('eName').value.trim(), nameEn:$('eNameEn').value.trim(), nick:$('eNick').value.trim(),
+    dept:$('eDept').value.trim(), vac:$('eVac').value, phone:$('ePhone').value.trim(), startDate:$('eStart').value.trim(), status:$('eStatus').value };
+  try{ await api({ action:'saveEmployee', employee }); $('dlgEmp').close(); await reload(); }
+  catch(e){ msg('eMsg', e.message); }
+}
+async function unlink(id){
+  if (!confirm('ยกเลิกการผูกบัญชี LINE ของพนักงานคนนี้? (ครั้งหน้าที่เปิดฟอร์มต้องเลือกชื่อใหม่)')) return;
+  try{ await api({ action:'unlinkLine', empId:id }); await reload(); }catch(e){ toast(e.message); }
+}
+
+/* ---------- ตั้งค่า ---------- */
+function renderSettings(){
+  $('tokenMsg').innerHTML = D.lineTokenSet ? '' : '<div class="msg warn" style="margin:0 0 10px">ยังไม่ได้ใส่ LINE_TOKEN ใน Script Properties — ระบบจะยังไม่ส่ง LINE (อีเมลยังส่งได้)</div>';
+  $('tbAdmins').innerHTML = D.admins.map(a => `<tr><td><b>${esc(a.name)}</b></td><td>${esc(a.lineName)}</td><td class="sub">${esc(a.ts)}</td>
+    <td><input type="checkbox" class="chk" ${a.notify?'checked':''} onchange="adminNotify('${esc(a.uid)}',this)"></td>
+    <td><button class="btn danger sm" onclick="removeAdmin('${esc(a.uid)}','${esc(a.name)}')">ลบ</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">ยังไม่มีแอดมิน</td></tr>';
+  $('admLink').textContent = D.settings.LIFF_ID ? 'https://liff.line.me/' + D.settings.LIFF_ID + '?mode=admin' : '(ใส่ LIFF_ID ในชีต "ตั้งค่า" ก่อน)';
+  $('setEmails').value = D.settings.NOTIFY_EMAILS;
+  $('cycList').innerHTML = D.cycles.map(c => `<div>รอบปี <b>${c.year}</b>: ${be(c.start)} – ${be(c.end)}</div>`).join('');
+  $('holList').innerHTML = D.holidays.map(h => `<span class="tag src" title="${esc(h.name)}">${be(h.date)} ${esc(h.name)}</span>`).join('');
+}
+async function adminNotify(uid, el){ try{ await api({ action:'setAdminNotify', uid, value:el.checked }); toast('บันทึกแล้ว'); }catch(e){ el.checked=!el.checked; toast(e.message); } }
+async function removeAdmin(uid, name){ if(!confirm('ลบแอดมิน ' + name + ' ?')) return; try{ await api({ action:'removeAdmin', uid }); await reload(); }catch(e){ toast(e.message); } }
+async function saveEmails(){ try{ await api({ action:'saveSetting', name:'NOTIFY_EMAILS', value:$('setEmails').value.trim() }); D.settings.NOTIFY_EMAILS=$('setEmails').value.trim(); toast('บันทึกอีเมลแล้ว'); }catch(e){ toast(e.message); } }
+function copyText(t){ try{ navigator.clipboard.writeText(t); toast('คัดลอกแล้ว'); }catch(e){ toast('คัดลอกไม่ได้'); } }
+
+/* ---------- CSV ---------- */
+function exportCSV(){
+  const rows = filtered();
+  const head = ['เลขที่','แจ้งเมื่อ','ชื่อ-นามสกุล','ชื่อเล่น','แผนก','ประเภท','วันที่เริ่ม','วันที่สิ้นสุด','ช่วงเวลา','จำนวนวัน','สาเหตุ','เบอร์','แจ้งย้อนหลัง','ใบรับรองแพทย์','ลง HIP แล้ว','หมายเหตุ'];
+  const q = v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
+  const body = rows.map(l => [l.no,l.ts,l.name,l.nick,l.dept,typeLabel(l),be(l.start),be(l.end),l.period,l.days,l.reason,l.phone,l.retro,l.medCert?'มี':'',l.hip?'ใช่':'',l.note].map(q).join(','));
+  const blob = new Blob(['﻿' + [head.map(q).join(',')].concat(body).join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const t = D.today.split('-'); a.download = `ใบลา_${t[2]}-${t[1]}-${+t[0]+543}.csv`; a.click();
+}
+
+/* ---------- start ---------- */
+(async () => {
+  const k = lsGet('vpack_leave_key');
+  if (k){ KEY = k; try{ await loadAll(); }catch(e){ lsSet('vpack_leave_key', null); msg('loginMsg', e.message); } }
+})();
+</script>
+</body>
+</html>
