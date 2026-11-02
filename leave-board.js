@@ -102,10 +102,17 @@
 
   function init() {
     if (!document.getElementById('vlb-style')) { const s = document.createElement('style'); s.id = 'vlb-style'; s.textContent = css; document.head.appendChild(s); }
-    document.querySelectorAll('#vpack-leave-board, .vpack-leave-board').forEach(box => {
+    // รองรับหน้าเว็บที่สร้างกล่องทีหลัง (เช่น หลังล็อกอิน) — คอยดูแล้วผูกกล่องใหม่อัตโนมัติ
+    const scan = () => document.querySelectorAll('#vpack-leave-board, .vpack-leave-board').forEach(box => {
+      if (box.dataset.vlbBound) return;
+      box.dataset.vlbBound = '1';
       load(box);
-      setInterval(() => load(box), REFRESH_MIN * 60 * 1000);
+      const t = setInterval(() => { if (!document.contains(box)) return clearInterval(t); load(box); }, REFRESH_MIN * 60 * 1000);
     });
+    scan();
+    let pending = false;
+    new MutationObserver(() => { if (pending) return; pending = true; setTimeout(() => { pending = false; scan(); }, 300); })
+      .observe(document.body, { childList: true, subtree: true });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
