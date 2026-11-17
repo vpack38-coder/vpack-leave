@@ -84,6 +84,10 @@ input[type=date]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:n
 .kv dd{margin:0;font-weight:500}
 .test{background:#fff4e0;color:#8a5300;font-size:12.5px;text-align:center;padding:6px 16px}
 .hidden{display:none!important}
+.abs{margin-top:12px;background:var(--bad-l);border-radius:12px;padding:10px 12px;color:var(--bad);font-size:14px}
+.abs b{font-size:15px}
+.abs .al{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.abs button{border:1.5px solid #f2c4c4;background:#fff;color:var(--bad);border-radius:999px;padding:4px 10px;font-size:13px;cursor:pointer}
 .emplist{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow:auto}
 .emp{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;background:#fff;text-align:left}
 .emp.on{border-color:var(--brand);background:var(--brand-l)}
@@ -144,6 +148,7 @@ input[type=date]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:n
       </div>
       <div class="bal" id="bal"></div>
       <div class="cyc" id="cycText"></div>
+      <div id="absBox"></div>
     </div>
 
     <div class="card">
@@ -304,6 +309,7 @@ function renderForm(){
   $('meHi').textContent = 'สวัสดี ' + (me.nick || me.name) + ' 👋';
   $('meDept').textContent = me.name + ' · ' + me.dept;
   renderBalance();
+  renderAbs();
   $('typeChips').innerHTML = d.types.map(t => `<button class="chip" data-t="${esc(t)}">${esc(t)}</button>`).join('');
   $('typeChips').querySelectorAll('.chip').forEach(c => c.onclick = () => { S.type = c.dataset.t; refresh(); });
   const times = []; for (let h=7; h<=18; h++){ ['00','30'].forEach(m => { if(!(h===18&&m==='30')) times.push(String(h).padStart(2,'0')+':'+m); }); }
@@ -326,6 +332,19 @@ function renderBalance(){
   };
   $('bal').innerHTML = tile('พักร้อน', u['ลาพักร้อน'].days, me.vac, 'left') + tile('ลากิจ', u['ลากิจ'].days, r.personal, 'left') + tile('ลาป่วย', u['ลาป่วย'].days, r.sick, 'used');
   $('cycText').textContent = 'รอบปี ' + d.cycle.year + ' (' + be(d.cycle.start) + ' – ' + be(d.cycle.end) + ') · นับเป็นวัน';
+}
+
+/* วันขาดงานตาม HIP Time ที่ยังไม่มีใบลา (รอบปีนี้) — กดเพื่อแจ้งลาย้อนหลังวันนั้น */
+function renderAbs(){
+  const A = S.data.myAbsences || [];
+  if (!A.length){ $('absBox').innerHTML = ''; return; }
+  const TH = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  $('absBox').innerHTML = `<div class="abs">⚠️ <b>ขาดงานไม่ได้ส่งใบลา ${A.length} วัน</b> (รอบปีนี้ ตามเครื่องสแกนนิ้ว)<br>กดวันที่ด้านล่างเพื่อแจ้งลาย้อนหลัง แล้วเลือกว่าจะใช้สิทธิ์ลาประเภทไหน` +
+    `<div class="al">${A.map(d => `<button type="button" onclick="pickAbs('${d}')">${TH[new Date(d+'T00:00:00Z').getUTCDay()]} ${be(d)}</button>`).join('')}</div></div>`;
+}
+function pickAbs(d){
+  S.period = 'full'; $('dStart').value = d; $('dEnd').value = d; refresh();
+  $('typeChips').scrollIntoView({ behavior:'smooth', block:'center' });
 }
 
 function renderHist(){
@@ -422,7 +441,8 @@ async function doSubmit(){
     S.data.me.phone = L.phone;
     S.data.myLeaves = [ {no:L.no,type:L.type,typeOther:L.typeOther,start:L.start,end:L.end,period:L.period,days:L.days,reason:L.reason}, ...(S.data.myLeaves||[]) ]
       .filter(x => S.data.cycle && x.start>=S.data.cycle.start && x.start<=S.data.cycle.end).sort((a,b)=>b.start.localeCompare(a.start));
-    renderBalance(); renderHist();
+    S.data.myAbsences = (S.data.myAbsences || []).filter(d => !(d >= L.start && d <= L.end));
+    renderBalance(); renderHist(); renderAbs();
     $('doneNote').textContent = 'บันทึกแล้ว · ระบบกำลังแจ้งแอดมินทาง LINE';
     $('doneKv').innerHTML = [
       ['เลขที่', L.no], ['ชื่อ', L.name + (L.nick?' ('+L.nick+')':'')], ['ประเภท', L.type==='อื่นๆ'?'อื่นๆ ('+L.typeOther+')':L.type],

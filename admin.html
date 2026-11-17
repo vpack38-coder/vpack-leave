@@ -9,6 +9,7 @@
   const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyY2Fmb3Jua3VtZ2J4ZHptZG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MTY4NTAsImV4cCI6MjEwOTE5Mjg1MH0.dBaUZO5UHHsRfKsTtIJhI4Qx3t5V1cX3npKMo3J4Exw';    // ตัวเดียวกับ index.html
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 </script>
 <style>
@@ -106,6 +107,7 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:12px;word-
   <nav id="nav" class="hidden">
     <button data-tab="leaves" class="on">ใบลา</button>
     <button data-tab="summary">สรุปรายคน</button>
+    <button data-tab="absent">ขาดงาน (HIP)</button>
     <button data-tab="emps">พนักงาน</button>
     <button data-tab="settings">แอดมิน/ตั้งค่า</button>
     <button onclick="zoomBy(-0.05)" title="ตัวหนังสือเล็กลง">A−</button><button onclick="zoomBy(0.05)" title="ตัวหนังสือใหญ่ขึ้น">A+</button>
@@ -154,10 +156,32 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:12px;word-
     <div class="card">
       <div class="h2">สรุปการลารายคน <span class="sp"><select id="sCycle"></select></span></div>
       <div class="tw"><table>
-        <thead><tr><th>พนักงาน</th><th>แผนก</th><th class="num">ลาพักร้อน<br><span class="sub">ใช้/สิทธิ์ (เหลือ)</span></th><th class="num">ลากิจ<br><span class="sub">ใช้/สิทธิ์ (เหลือ)</span></th><th class="num">ลาป่วย<br><span class="sub">วัน (ครั้ง)</span></th><th class="num">ลาคลอด</th><th class="num">กท.</th><th class="num">อื่นๆ</th><th class="num">รวม (วัน)</th></tr></thead>
+        <thead><tr><th>พนักงาน</th><th>แผนก</th><th class="num">ลาพักร้อน<br><span class="sub">ใช้/สิทธิ์ (เหลือ)</span></th><th class="num">ลากิจ<br><span class="sub">ใช้/สิทธิ์ (เหลือ)</span></th><th class="num">ลาป่วย<br><span class="sub">วัน (ครั้ง)</span></th><th class="num">ลาคลอด</th><th class="num">กท.</th><th class="num">อื่นๆ</th><th class="num">รวม (วัน)</th><th class="num" title="ขาดงานตาม HIP Time ที่ยังไม่มีใบลา">ขาดงาน<br><span class="sub">ไม่แจ้งลา</span></th></tr></thead>
         <tbody id="tbSum"></tbody>
       </table></div>
       <div class="sub" style="margin-top:10px">คลิกชื่อเพื่อดูใบลาของคนนั้น · นับตามวันที่เริ่มลา · สีแดง = เกินสิทธิ์</div>
+    </div>
+  </section>
+
+  <!-- ขาดงาน (HIP) -->
+  <section id="tab-absent" class="hidden">
+    <div class="card">
+      <div class="h2">ขาดงานไม่แจ้งลา (จาก HIP Time)
+        <span class="sp"><label class="btn" style="cursor:pointer">📥 นำเข้าไฟล์ HIP Time (.xlsx)<input type="file" id="hipFile" accept=".xlsx,.xls" style="display:none"></label></span></div>
+      <div class="sub" style="margin-bottom:8px">นำเข้าไฟล์ที่ export จาก HIP Time 4.0 · ระบบเก็บเฉพาะวันที่ HIP ขึ้นว่า "ขาดงาน" · ถ้าภายหลังพนักงานส่งใบลาครอบวันนั้น จะตัดออกให้อัตโนมัติ · นำเข้าซ้ำได้ (ช่วงวันที่เดียวกันจะแทนที่ของเดิม)</div>
+      <div id="hipResult"></div>
+      <div class="filters" style="margin-top:8px">
+        <select id="aCycle"></select>
+        <select id="aEmp"><option value="">พนักงานทุกคน</option></select>
+        <select id="aStat"><option value="open">ยังไม่ส่งใบลา</option><option value="covered">มีใบลาแล้ว (ตัดออก)</option><option value="">ทั้งหมด</option></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tw"><table>
+        <thead><tr><th>วันที่</th><th>พนักงาน</th><th>สถานะ</th><th>หมายเหตุ</th><th></th></tr></thead>
+        <tbody id="tbAbs"></tbody>
+      </table></div>
+      <div id="absFoot" class="sub" style="margin-top:8px"></div>
     </div>
   </section>
 
@@ -245,6 +269,7 @@ code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:12px;word-
       <label>เบอร์โทร<input id="ePhone"></label>
       <label>วันเริ่มงาน (วว/ดด/ปปปป)<input id="eStart" placeholder="เช่น 01/06/2569"></label>
       <label>สถานะ<select id="eStatus"><option>ทำงาน</option><option>ลาออก</option></select></label>
+      <label>รหัสในเครื่องสแกนนิ้ว (HIP)<input id="eHip" placeholder="เช่น 02"></label>
     </div>
     <div id="eMsg"></div>
   </div>
@@ -286,7 +311,7 @@ const L2C = r => ({ no:r.no, ts:tsBE(r.ts), tsIso:r.ts, empId:r.emp_id||'', name
   phone:r.phone||'', retro:r.retro?'ย้อนหลัง':'', hip:!!r.hip, medCert:!!r.med_cert, note:r.note||'', lineStatus:r.line_status||'',
   mailStatus:r.mail_status||'', source:r.source||'' });
 const E2C = r => ({ id:r.id, title:r.title||'', name:r.name||'', nameEn:r.name_en||'', nick:r.nick||'', dept:r.dept||'', vac:+r.vac||0,
-  phone:r.phone||'', startDate:r.start_date||'', status:r.status||'ทำงาน', linked:!!r.line_uid, lineName:r.line_name||'' });
+  phone:r.phone||'', startDate:r.start_date||'', status:r.status||'ทำงาน', linked:!!r.line_uid, lineName:r.line_name||'', hipCode:r.hip_code||'' });
 function withEnds(cs){
   cs.sort((a,b)=>a.start.localeCompare(b.start));
   cs.forEach((c,i)=>{ c.end = cs[i+1] ? addDays(cs[i+1].start,-1) : addDays((+c.start.slice(0,4)+1)+c.start.slice(4),-1); });
@@ -297,14 +322,15 @@ async function api(body){
   const c = sb();
   switch (body.action){
     case 'adminData': {
-      const [emps, lv, hol, cyc, adm, st] = (await Promise.all([
+      const [emps, lv, hol, cyc, adm, st, ab] = (await Promise.all([
         c.from('employees').select('*').order('id'),
         c.from('leaves').select('*').order('start_date', { ascending:false }).limit(10000),
         c.from('holidays').select('*').order('d'),
         c.from('cycles').select('*'),
         c.from('admins').select('*').order('ts'),
-        c.from('settings').select('k,v')
-      ])).map(chk);
+        c.from('settings').select('k,v'),
+        c.from('absences').select('*').order('d', { ascending:false }).limit(20000)
+      ])).map(r => r.error && /absences/.test(r.error.message) ? { data: [] } : r).map(chk);
       if (!st.length) throw new Error('บัญชีนี้ยังไม่มีสิทธิ์เข้าหน้าจัดการ (ต้องเพิ่มอีเมลในตาราง web_admins)');
       const S = {}; st.forEach(x => S[x.k] = x.v || '');
       return { ok:true, today: dateTH(new Date()), types: TYPES,
@@ -314,6 +340,7 @@ async function api(body){
         admins: adm.map(a => ({ uid:a.line_uid, lineName:a.line_name||'', name:a.name||'', ts:tsBE(a.ts), notify:!!a.notify })),
         rules: { sick:+S.SICK_DAYS||30, personal:+S.PERSONAL_DAYS||3, hoursPerDay:+S.HOURS_PER_DAY||8 },
         settings: { NOTIFY_EMAILS:S.NOTIFY_EMAILS||'', LIFF_ID:S.LIFF_ID||'' },
+        absences: (ab||[]).map(a => ({ empId:a.emp_id, d:a.d, note:a.note||'' })),
         notifyReady: !!(S.NOTIFY_URL && S.NOTIFY_SECRET) };
     }
     case 'setHip':
@@ -345,11 +372,22 @@ async function api(body){
     case 'saveEmployee': {
       const E = body.employee;
       if (!String(E.name||'').trim()) throw new Error('กรุณากรอกชื่อ-นามสกุล');
-      const row = { title:E.title, name:E.name, name_en:E.nameEn, nick:E.nick, dept:E.dept, vac:+E.vac||0, phone:E.phone, start_date:E.startDate, status:E.status||'ทำงาน' };
+      const row = { title:E.title, name:E.name, name_en:E.nameEn, nick:E.nick, dept:E.dept, vac:+E.vac||0, phone:E.phone, start_date:E.startDate, status:E.status||'ทำงาน', hip_code:E.hipCode||null };
       if (E.id){ chk(await c.from('employees').update(row).eq('id', E.id)); return { ok:true, id:E.id }; }
       const n = Math.max(0, ...D.employees.map(x => parseInt(String(x.id).replace(/\D/g,''),10)||0)) + 1;
       const id = 'E' + String(n).padStart(2,'0');
       chk(await c.from('employees').insert(Object.assign({ id }, row))); return { ok:true, id };
+    }
+    case 'deleteAbsence':
+      chk(await c.from('absences').delete().eq('emp_id', body.empId).eq('d', body.d)); return { ok:true };
+    case 'importHip': {
+      // อัปเดตรหัส HIP ของพนักงานที่จับคู่ได้
+      for (const [id, code] of Object.entries(body.codes)) chk(await c.from('employees').update({ hip_code: code }).eq('id', id));
+      // แทนที่วันขาดงานในช่วงวันที่ของไฟล์ (เฉพาะพนักงานที่อยู่ในไฟล์)
+      const ids = Object.keys(body.codes);
+      if (ids.length) chk(await c.from('absences').delete().in('emp_id', ids).gte('d', body.from).lte('d', body.to));
+      for (let i = 0; i < body.rows.length; i += 500) chk(await c.from('absences').upsert(body.rows.slice(i, i + 500)));
+      return { ok:true };
     }
     case 'unlinkLine':
       chk(await c.from('employees').update({ line_uid:null, line_name:null }).eq('id', body.empId)); return { ok:true };
@@ -390,7 +428,7 @@ async function reload(){ try{ D = await api({ action:'adminData' }); lsSet('vpac
 document.querySelectorAll('nav button[data-tab]').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 function showTab(t){
   document.querySelectorAll('nav button[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab===t));
-  ['leaves','summary','emps','settings'].forEach(x => $('tab-'+x).classList.toggle('hidden', x!==t));
+  ['leaves','summary','absent','emps','settings'].forEach(x => $('tab-'+x).classList.toggle('hidden', x!==t));
   lsSet('vpack_leave_tab', t);
 }
 
@@ -417,7 +455,7 @@ function renderAll(){
   $('fEmp').innerHTML = '<option value="">พนักงานทุกคน</option>' + D.employees.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.nick)})</option>`).join('');
   $('fEmp').value = cur;
   $('deptList').innerHTML = [...new Set(D.employees.map(e=>e.dept))].map(d=>`<option>${esc(d)}</option>`).join('');
-  renderLeaves(); renderSummary(); renderEmps(); renderSettings();
+  renderLeaves(); renderSummary(); renderAbsences(); renderEmps(); renderSettings();
 }
 
 /* ---------- ใบลา ---------- */
@@ -466,7 +504,8 @@ function renderLeaves(){
     <div class="stat ${noHip?'alert':''}" style="cursor:pointer" onclick="$('fHip').value='no';$('fCycle').value='';renderLeaves()"><div class="n">${noHip}</div><div class="l">ยังไม่ลง HIP (คลิกเพื่อดู)</div></div>
     <div class="stat"><div class="n">${thisMonth.length}</div><div class="l">ใบลาเดือนนี้ · ${num(thisMonth.reduce((s,l)=>s+l.days,0))} วัน</div></div>
     <div class="stat"><div class="n">${inCyc.length}</div><div class="l">ใบลารอบปี ${cc?cc.year:''} · ${num(inCyc.reduce((s,l)=>s+l.days,0))} วัน</div></div>
-    <div class="stat ${failed?'alert':''}"><div class="n">${failed}</div><div class="l">แจ้งเตือน LINE ไม่สำเร็จ</div></div>`;
+    <div class="stat ${failed?'alert':''}"><div class="n">${failed}</div><div class="l">แจ้งเตือน LINE ไม่สำเร็จ</div></div>
+    ${(() => { const n = cc ? D.employees.reduce((s,e) => s + absOf(e.id, cc).filter(a => !a.covered).length, 0) : 0; return `<div class="stat ${n?'alert':''}" style="cursor:pointer" onclick="jumpAbs('')"><div class="n">${n}</div><div class="l">วันขาดงานไม่แจ้งลา (รอบปี ${cc?cc.year:''})</div></div>`; })()}`;
   renderEmpStat();
 }
 
@@ -485,9 +524,11 @@ function renderEmpStat(){
     const sub = q ? (t==='ลาป่วย' ? `${x.c} ครั้ง` : `เหลือ ${num(q-x.d)} วัน · ${x.c} ครั้ง`) : `${x.c} ครั้ง`;
     return `<div class="es ${over?'over':''}"><div class="t">${esc(short[t]||t)}</div><div class="v">${val}</div><div class="s">${sub}</div></div>`;
   }).join('');
+  const nAbs = cy ? absOf(e.id, cy).filter(a => !a.covered).length : 0;
+  const absItem = `<div class="es ${nAbs?'over':''}" style="cursor:pointer" onclick="jumpAbs('${e.id}')" title="ดูรายการวันขาดงาน"><div class="t">ขาดงานไม่แจ้งลา</div><div class="v">${nAbs}</div><div class="s">วัน (จาก HIP)</div></div>`;
   const tot = Object.values(u).reduce((s,x)=>s+x.d,0);
   box.innerHTML = `<div class="eh"><b>${esc(e.name)} (${esc(e.nick)})</b> <span class="sub">${esc(e.dept)} · รอบปี ${cy?cy.year:''} (${cy?be(cy.start)+'–'+be(cy.end):''}) · รวม ${num(tot)} วัน</span>
-    <button class="btn sec sm" style="margin-left:auto" onclick="$('fEmp').value='';renderLeaves()">× ดูทุกคน</button></div><div class="eg">${items}</div>`;
+    <button class="btn sec sm" style="margin-left:auto" onclick="$('fEmp').value='';renderLeaves()">× ดูทุกคน</button></div><div class="eg">${items}${absItem}</div>`;
   box.classList.remove('hidden');
 }
 
@@ -547,7 +588,7 @@ async function saveLeave(){
     const r = await api({ action:'saveLeave', leave, notify:$('lNotify').checked });
     const i = D.leaves.findIndex(x=>x.no===r.leave.no);
     if (i>=0) D.leaves[i] = r.leave; else D.leaves.push(r.leave);
-    $('dlgLeave').close(); renderLeaves(); renderSummary(); toast('บันทึกใบลา ' + r.leave.no + ' แล้ว');
+    $('dlgLeave').close(); renderLeaves(); renderSummary(); renderAbsences(); toast('บันทึกใบลา ' + r.leave.no + ' แล้ว');
   }catch(e){ msg('lMsg', e.message); }
   finally{ b.disabled = false; }
 }
@@ -555,7 +596,7 @@ async function saveLeave(){
 async function delLeave(){
   if (!confirm('ลบใบลา ' + editNo + ' ? ลบแล้วกู้คืนไม่ได้')) return;
   const no = editNo, bt = $('lDel'); bt.disabled = true; $('lSave').disabled = true; $('lResend').disabled = true; msg('lMsg','กำลังลบ…','warn');
-  try{ await api({ action:'deleteLeave', no }); D.leaves = D.leaves.filter(x=>x.no!==no); $('dlgLeave').close(); renderLeaves(); renderSummary(); toast('ลบใบลา ' + no + ' แล้ว'); }
+  try{ await api({ action:'deleteLeave', no }); D.leaves = D.leaves.filter(x=>x.no!==no); $('dlgLeave').close(); renderLeaves(); renderSummary(); renderAbsences(); toast('ลบใบลา ' + no + ' แล้ว'); }
   catch(e){ msg('lMsg', 'ลบไม่สำเร็จ: ' + e.message); alert('ลบไม่สำเร็จ: ' + e.message); }
   finally{ bt.disabled = false; $('lSave').disabled = false; $('lResend').disabled = false; }
 }
@@ -586,12 +627,128 @@ function renderSummary(){
       <td class="num">${quota(u['ลากิจ'].d, D.rules.personal)}</td>
       <td class="num"><span class="${u['ลาป่วย'].d>D.rules.sick?'over':''}">${num(u['ลาป่วย'].d)}</span> <span class="sub">(${u['ลาป่วย'].c} ครั้ง)</span></td>
       <td class="num">${dc(u['ลาคลอด'])}</td><td class="num">${dc(u['อุบัติเหตุจากการทำงาน(กท.)'])}</td><td class="num">${dc(u['อื่นๆ'])}</td>
-      <td class="num"><b>${num(tot)}</b></td></tr>`;
+      <td class="num"><b>${num(tot)}</b></td>
+      <td class="num">${(() => { const n = absOf(e.id, cy).filter(a => !a.covered).length; return n ? `<a href="#" class="over" onclick="jumpAbs('${e.id}');return false">${n} วัน</a>` : '<span class="sub">-</span>'; })()}</td></tr>`;
   });
   const orphan = D.leaves.filter(l => !l.empId && l.start>=cy.start && l.start<=cy.end).length;
-  $('tbSum').innerHTML = rows.join('') + (orphan ? `<tr><td colspan="9" class="sub">⚠️ มีใบลา ${orphan} รายการที่ไม่ได้จับคู่กับพนักงาน (ดูแท็บใบลา → แก้ไข → เลือกพนักงาน)</td></tr>` : '');
+  $('tbSum').innerHTML = rows.join('') + (orphan ? `<tr><td colspan="10" class="sub">⚠️ มีใบลา ${orphan} รายการที่ไม่ได้จับคู่กับพนักงาน (ดูแท็บใบลา → แก้ไข → เลือกพนักงาน)</td></tr>` : '');
 }
 function jumpEmp(id){ $('fEmp').value = id; $('fCycle').value = $('sCycle').value; $('fType').value=''; $('fHip').value=''; $('fQ').value=''; renderLeaves(); showTab('leaves'); }
+
+/* ---------- ขาดงาน (HIP Time) ---------- */
+function covered(empId, d){ return D.leaves.some(l => l.empId===empId && l.start<=d && d<=l.end); }
+function absOf(empId, cy){ return (D.absences||[]).filter(a => a.empId===empId && (!cy || (a.d>=cy.start && a.d<=cy.end))).map(a => Object.assign({}, a, { covered: covered(a.empId, a.d) })); }
+function jumpAbs(empId){ $('aEmp').value = empId; $('aCycle').value = $('fCycle').value || (curCycle()||{}).year || ''; $('aStat').value = 'open'; renderAbsences(); showTab('absent'); }
+function renderAbsences(){
+  if (!$('aCycle').options.length){
+    $('aCycle').innerHTML = D.cycles.slice().reverse().map(c => `<option value="${c.year}">รอบปี ${c.year} (${be(c.start)}–${be(c.end)})</option>`).join('') + '<option value="">ทุกช่วง (ทั้งปี)</option>';
+    const cc = curCycle(); if (cc) $('aCycle').value = cc.year;
+    ['aCycle','aEmp','aStat'].forEach(id => $(id).onchange = renderAbsences);
+  }
+  const cur = $('aEmp').value;
+  $('aEmp').innerHTML = '<option value="">พนักงานทุกคน</option>' + D.employees.map(e => `<option value="${e.id}">${esc(e.name)} (${esc(e.nick)})</option>`).join('');
+  $('aEmp').value = cur;
+  const cy = D.cycles.find(c => c.year===$('aCycle').value), emp = $('aEmp').value, st = $('aStat').value;
+  const rows = (D.absences||[]).filter(a => (!cy || (a.d>=cy.start && a.d<=cy.end)) && (!emp || a.empId===emp))
+    .map(a => Object.assign({}, a, { covered: covered(a.empId, a.d) }))
+    .filter(a => !st || (st==='open' ? !a.covered : a.covered))
+    .sort((a,b) => b.d.localeCompare(a.d) || a.empId.localeCompare(b.empId));
+  const TH_DAY = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  $('tbAbs').innerHTML = rows.map(a => { const e = empById(a.empId) || {};
+    const lv = a.covered ? D.leaves.find(l => l.empId===a.empId && l.start<=a.d && a.d<=l.end) : null;
+    return `<tr><td class="nw">${TH_DAY[new Date(a.d+'T00:00:00Z').getUTCDay()]} ${be(a.d)}</td>
+      <td class="nw"><b>${esc(e.name||a.empId)}</b> ${e.nick?'('+esc(e.nick)+')':''}<br><span class="sub">${esc(e.dept||'')}</span></td>
+      <td>${a.covered ? `<span class="tag t-ลาพักร้อน">มีใบลาแล้ว ${esc(lv.no)}</span>${lv.hip?'':' <span class="tag retro">ยังไม่ลง HIP</span>'}` : '<span class="tag retro" style="background:var(--bad-l);color:var(--bad)">ขาดงาน ยังไม่ส่งใบลา</span>'}</td>
+      <td class="sub">${esc(a.note)}</td>
+      <td class="nw">${a.covered ? `<button class="btn sec sm" onclick="openLeave('${esc(lv.no)}')">ดูใบลา</button>` : `<button class="btn sec sm" onclick="absToLeave('${a.empId}','${a.d}')">บันทึกเป็นใบลา</button> <button class="btn danger sm" onclick="delAbs('${a.empId}','${a.d}')">ลบ</button>`}</td></tr>`; }).join('')
+    || '<tr><td colspan="5" class="muted" style="text-align:center;padding:20px">ไม่มีรายการ</td></tr>';
+  const open = rows.filter(a => !a.covered).length;
+  $('absFoot').textContent = `แสดง ${rows.length} รายการ` + (st!=='open' ? ` · ยังไม่ส่งใบลา ${open} วัน` : '');
+}
+function absToLeave(empId, d){
+  openLeave();
+  $('lEmp').value = empId; $('lStart').value = d; $('lEnd').value = d; $('lPeriod').value = 'เต็มวัน';
+  $('lReason').value = ''; $('lNote').value = 'บันทึกแทน (ขาดงานตาม HIP)';
+  const e = empById(empId); $('lPhone').value = e ? e.phone : '';
+  $('lDays').value = autoDays();
+}
+async function delAbs(empId, d){
+  if (!confirm('ลบวันขาดงาน ' + be(d) + ' ? (เช่น HIP บันทึกผิด)')) return;
+  try{ await api({ action:'deleteAbsence', empId, d }); D.absences = D.absences.filter(a => !(a.empId===empId && a.d===d)); renderAbsences(); renderSummary(); renderLeaves(); toast('ลบแล้ว'); }
+  catch(e){ toast(e.message); }
+}
+
+/* อ่านไฟล์ HIP Time: คอลัมน์ รหัสที่เครื่อง | ชื่อ-นามสกุล | วันที่ | 1..5 (เวลาสแกน) | หมายเหตุ */
+function hipNorm(s){ return String(s||'').replace(/[​ ]/g,' ').replace(/\s+(นาย|นางสาว|นาง|น\.ส\.)$/,'').replace(/^(นาย|นางสาว|นาง)\s*/,'').replace(/\s+/g,' ').trim(); }
+function editDist(a,b){ const m=a.length,n=b.length,d=[...Array(m+1)].map((_,i)=>[i]); for(let j=1;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1)); return d[m][n]; }
+function hipDate(v){
+  if (v instanceof Date) return dateTH(v);
+  if (typeof v === 'number'){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.toISOString().slice(0,10); }
+  const m = String(v||'').trim().match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/); if (!m) return '';
+  let y = +m[3]; if (y > 2400) y -= 543;
+  return y + '-' + String(m[2]).padStart(2,'0') + '-' + String(m[1]).padStart(2,'0');
+}
+$('hipFile').onchange = async ev => {
+  const f = ev.target.files[0]; ev.target.value = ''; if (!f) return;
+  const out = $('hipResult');
+  out.innerHTML = '<div class="msg warn">กำลังอ่านไฟล์…</div>';
+  try{
+    if (typeof XLSX === 'undefined') throw new Error('โหลดตัวอ่าน Excel ไม่สำเร็จ ลองรีเฟรชหน้าแล้วนำเข้าใหม่');
+    const wb = XLSX.read(await f.arrayBuffer(), { type:'array', cellDates:true });
+    const grid = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:true, defval:'' });
+    const hi = grid.findIndex(r => r.some(c => /รหัสที่เครื่อง/.test(String(c))) && r.some(c => /วันที่/.test(String(c))));
+    if (hi < 0) throw new Error('ไม่พบหัวตาราง "รหัสที่เครื่อง / ชื่อ-นามสกุล / วันที่" — ไฟล์นี้ใช่รายงานจาก HIP Time ไหม');
+    const H = grid[hi].map(c => String(c).trim());
+    const ci = { code: H.indexOf('รหัสที่เครื่อง'), name: H.findIndex(c => /ชื่อ/.test(c)), date: H.indexOf('วันที่'), note: H.findIndex(c => /หมายเหตุ/.test(c)) };
+    const scanCols = H.map((c,i) => /^[1-9]$/.test(c) ? i : -1).filter(i => i >= 0);
+    // จับคู่รหัสเครื่อง ↔ พนักงาน (ใช้รหัสที่เคยบันทึกไว้ก่อน แล้วค่อยเทียบชื่อ)
+    const codeMap = {}, skipped = {}, newCodes = {};
+    const findEmp = (code, nm) => {
+      if (codeMap[code] !== undefined) return codeMap[code];
+      let e = D.employees.find(x => x.hipCode && x.hipCode === code);
+      if (!e){ const n = hipNorm(nm), [f1, ...ls] = n.split(' '), last = ls.join(' ');
+        e = D.employees.find(x => hipNorm(x.name) === n) || D.employees.find(x => { const [g1, ...gl] = hipNorm(x.name).split(' '); return gl.join(' ') === last && editDist(g1, f1) <= 2; });
+        if (e && e.hipCode !== code) newCodes[e.id] = code; }
+      codeMap[code] = e ? e.id : null; if (!e) skipped[code] = hipNorm(nm); return codeMap[code];
+    };
+    const abs = [], hipLeaves = []; let minD = '9999', maxD = '0000';
+    grid.slice(hi + 1).forEach(r => {
+      const code = String(r[ci.code]||'').trim(), d = hipDate(r[ci.date]); if (!code || !d) return;
+      if (d < minD) minD = d; if (d > maxD) maxD = d;
+      const empId = findEmp(code, r[ci.name]); if (!empId) return;
+      const note = String(r[ci.note]||'').trim();
+      const scans = scanCols.filter(i => String(r[i]||'').trim()).length;
+      if (/^ขาดงาน/.test(note) && !scans) abs.push({ emp_id: empId, d, note: '', source: 'HIP' });
+      else if (/^(ลา|อุบัติเหตุ)/.test(note) && !covered(empId, d) && d >= ((curCycle()||{}).start || '0000')) hipLeaves.push({ empId, d, note });
+    });
+    if (!abs.length && !hipLeaves.length && !Object.keys(codeMap).length) throw new Error('ไม่พบข้อมูลพนักงานในไฟล์');
+    const empIds = Object.entries(codeMap).filter(([,v]) => v).map(([k,v]) => v);
+    const codes = {}; empIds.forEach(id => codes[id] = newCodes[id] || (empById(id).hipCode || Object.keys(codeMap).find(k => codeMap[k]===id)));
+    await api({ action:'importHip', codes, from:minD, to:maxD, rows:abs });
+    D = await api({ action:'adminData' }); lsSet('vpack_leave_cache', JSON.stringify(D)); renderAll();
+    const openN = abs.filter(a => !covered(a.emp_id, a.d)).length, covN = abs.length - openN;
+    const sk = Object.entries(skipped).map(([c,n]) => `${esc(n)} (รหัส ${esc(c)})`).join(', ');
+    out.innerHTML = `<div class="msg ok">✓ นำเข้าช่วง ${be(minD)} – ${be(maxD)} · พนักงาน ${empIds.length} คน · ขาดงานตาม HIP ${abs.length} วัน
+        → <b>ยังไม่ส่งใบลา ${openN} วัน</b> · มีใบลาแล้ว ${covN} วัน${covN ? ' (ส่วนใหญ่คือยังไม่ได้ลง HIP)' : ''}</div>` +
+      (sk ? `<div class="msg warn">ข้าม (ไม่มีในทะเบียนพนักงาน): ${sk}</div>` : '') +
+      (hipLeaves.length ? `<div class="msg warn"><b>ลาใน HIP แต่ไม่มีใบลาในระบบ ${hipLeaves.length} วัน</b> (รอบปีปัจจุบัน) (เช่น ลากระดาษ / แจ้งปากเปล่า) — กดเพื่อบันทึกเป็นใบลา ยอดวันลาคงเหลือจะได้ตรง
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${hipLeaves.sort((a,b)=>b.d.localeCompare(a.d)).slice(0,60).map(h => { const e = empById(h.empId);
+          return `<button class="btn sec sm" onclick="hipToLeave('${h.empId}','${h.d}',this)" data-note="${esc(h.note)}">${be(h.d)} ${esc(e.nick||e.name)} · ${esc(h.note)}</button>`; }).join('')}</div></div>` : '');
+    $('aStat').value = 'open'; renderAbsences();
+  }catch(e){ out.innerHTML = '<div class="msg bad">นำเข้าไม่สำเร็จ: ' + esc(e.message) + '</div>'; }
+};
+function hipToLeave(empId, d, btn){
+  const note = btn.dataset.note || '';
+  const type = D.types.find(t => note.replace(/\s/g,'').startsWith(t.replace(/\s/g,''))) || (/^ลาป่วย/.test(note) ? 'ลาป่วย' : 'อื่นๆ');
+  absToLeave(empId, d);
+  $('lType').value = type; $('lType').onchange();
+  if (type === 'อื่นๆ') $('lOther').value = note;
+  $('lReason').value = (note.match(/\((.*)\)/) || [,''])[1] || note;
+  $('lNote').value = 'บันทึกจาก HIP Time';
+  if (/ครึ่ง|บ่าย/.test(note)) { $('lPeriod').value = 'ครึ่งวันบ่าย (13:00-17:00)'; $('lDays').value = autoDays(); }
+  $('lHip').checked = true;
+}
 
 /* ---------- พนักงาน ---------- */
 function renderEmps(){
@@ -606,12 +763,12 @@ function openEmp(id){
   const e = id ? empById(id) : { title:'นาย', name:'', nameEn:'', nick:'', dept:'', vac:6, phone:'', startDate:'', status:'ทำงาน' };
   $('deTitle').textContent = id ? 'แก้ไขพนักงาน ' + id : 'เพิ่มพนักงานใหม่';
   $('eTitle').value=e.title||'นาย'; $('eName').value=e.name; $('eNameEn').value=e.nameEn; $('eNick').value=e.nick; $('eDept').value=e.dept;
-  $('eVac').value=e.vac; $('ePhone').value=e.phone; $('eStart').value=e.startDate; $('eStatus').value=e.status||'ทำงาน';
+  $('eVac').value=e.vac; $('ePhone').value=e.phone; $('eStart').value=e.startDate; $('eStatus').value=e.status||'ทำงาน'; $('eHip').value=e.hipCode||'';
   msg('eMsg',''); $('dlgEmp').showModal();
 }
 async function saveEmp(){
   const employee = { id:editEmp, title:$('eTitle').value, name:$('eName').value.trim(), nameEn:$('eNameEn').value.trim(), nick:$('eNick').value.trim(),
-    dept:$('eDept').value.trim(), vac:$('eVac').value, phone:$('ePhone').value.trim(), startDate:$('eStart').value.trim(), status:$('eStatus').value };
+    dept:$('eDept').value.trim(), vac:$('eVac').value, phone:$('ePhone').value.trim(), startDate:$('eStart').value.trim(), status:$('eStatus').value, hipCode:$('eHip').value.trim() };
   try{ await api({ action:'saveEmployee', employee }); $('dlgEmp').close(); await reload(); }
   catch(e){ msg('eMsg', e.message); }
 }
